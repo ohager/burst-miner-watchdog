@@ -11,5 +11,4 @@ class ExplorerAPI {
 	}
 }
 
-//TODO: make it configurable!
-module.exports =  new ExplorerAPI('https://explore.burst.cryptoguru.org/api/v1/');
+module.exports =  ExplorerAPI;

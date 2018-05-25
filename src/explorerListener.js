@@ -1,10 +1,10 @@
-const api = require('./explorerApi');
+const ExplorerApi = require('./explorerApi');
 const throttle = require('lodash.throttle');
 
 const LISTEN_INTERVAL = 500;
 const REQUEST_INTERVAL = 5000;
 
-async function request(cb) {
+async function request(cb, api) {
 	
 	const lastBlocks = await api.getLastBlocks();
 	cb.call(null, lastBlocks);
@@ -12,14 +12,15 @@ async function request(cb) {
 }
 
 class BurstExplorerListener {
-	constructor() {
+	constructor(explorerBaseUrl) {
+		this.explorerBaseUrl = explorerBaseUrl;
 		this.requestStop = false;
 		this.interval = null;
 	}
 	
 	start(cb) {
 		this.requestStop = false;
-		const throttledRequest = throttle(request.bind(this, cb), REQUEST_INTERVAL);
+		const throttledRequest = throttle(request.bind(this, cb, new ExplorerApi(this.explorerBaseUrl)), REQUEST_INTERVAL);
 		
 		return new Promise(((resolve, reject) => {
 			
@@ -44,4 +45,4 @@ class BurstExplorerListener {
 	}
 }
 
-module.exports = new BurstExplorerListener();
+module.exports = BurstExplorerListener;

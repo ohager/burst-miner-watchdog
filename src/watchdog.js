@@ -1,17 +1,17 @@
 const readline = require('readline');
-const WebSocket = require('ws');
-const explorerListener = require('./explorerListener');
+const ExplorerListener = require('./explorerListener');
+const creepMinerDataReader = require('./creepMinerDataReader');
+const MinerListener = require('./minerListener');
+const config = require('./config');
 
-// miner
-/*
-const ws = new WebSocket('ws://localhost:8124/');
-ws.on('message', data =>  {
-	console.log(data);
+// todo: user rxjs for this!
+const minerListener = new MinerListener(config.MinerWebsocketUrl);
+const explorerListener = new ExplorerListener(config.ExplorerApiUrl);
+
+minerListener.start( data => {
+	console.log('received data');
 });
-*/
 
-
-// Allows us to listen for events from stdin
 readline.emitKeypressEvents(process.stdin);
 process.stdin.setRawMode(true);
 process.stdin.on('keypress', async (str, key) => {
@@ -20,12 +20,14 @@ process.stdin.on('keypress', async (str, key) => {
 		key.sequence === '\u0003'
 	){
 		console.log("Stopping listener...");
+		minerListener.stop();
 		await explorerListener.stop();
 		process.exit(0);
 	}
 	
 	console.log("Press ESC to exit");
 });
+
 
 explorerListener.start( lastBlocks => {
 	console.log(lastBlocks.length > 0 ? lastBlocks[0] : "Nothing returned");
