@@ -1,47 +1,18 @@
+const Rx = require('rxjs');
 const ExplorerApi = require('./explorerApi');
-const throttle = require('lodash.throttle');
 
-const LISTEN_INTERVAL = 500;
 const REQUEST_INTERVAL = 5000;
-
-async function request(cb, api) {
-	
-	const lastBlocks = await api.getLastBlocks();
-	cb.call(null, lastBlocks);
-	
-}
 
 class BurstExplorerListener {
 	constructor(explorerBaseUrl) {
 		this.explorerBaseUrl = explorerBaseUrl;
-		this.requestStop = false;
-		this.interval = null;
 	}
 	
 	start(cb) {
-		this.requestStop = false;
-		const throttledRequest = throttle(request.bind(this, cb, new ExplorerApi(this.explorerBaseUrl)), REQUEST_INTERVAL);
-		
-		return new Promise(((resolve, reject) => {
-			
-			this.interval = setInterval(async () => {
-				
-				if (this.requestStop) {
-					clearInterval(this.interval);
-					resolve();
-				}
-				throttledRequest();
-			}, LISTEN_INTERVAL)
-		}))
-	}
-	
-	stop() {
-		return new Promise((resolve, reject) => {
-			this.requestStop = true;
-			setTimeout(() => {
-				resolve();
-			}, LISTEN_INTERVAL * 2);
-		})
+		const api =  new ExplorerApi(this.explorerBaseUrl);
+		return Rx.Observable
+			.interval(REQUEST_INTERVAL)
+			.flatMap( i => Rx.Observable.fromPromise(api.getLastBlock()) );
 	}
 }
 

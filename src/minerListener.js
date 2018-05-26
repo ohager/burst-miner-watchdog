@@ -1,26 +1,49 @@
 const WebSocket = require('ws');
+const Rx = require('rxjs');
+const {writeInfo, writeError, writeSuccess, waitFor} = require('./utils');
+
+const CONNECT_RETRY_TIMEOUT = 3000;
 
 class MinerListener {
 	constructor(url) {
 		this.wsUrl = url;
 		this.socket = null;
+		this.retryTimeout = null;
 	}
 	
-	start(cb) {
+	start() {
 		this.socket = new WebSocket(this.wsUrl);
+		
+		this.socket.on('error', (e) => {
+			if (e.code === 'ECONNREFUSED') {
+				writeInfo(`Could not connect to [${this.wsUrl}]...reconnecting`);
+				this.socket = null;
+				this.retryTimeout = setTimeout(() => {
+					this.start()
+				}, CONNECT_RETRY_TIMEOUT)
+			}else{
+				writeError(`Error for [${this.wsUrl}]: ${e}`);
+			}
+		});
+		
 		this.socket.on('open', () => {
-			console.log(`Successfully connected to ${this.wsUrl}`);
+			writeSuccess(`Successfully connected to [${this.wsUrl}]`);
 		});
 		
 		this.socket.on('close', () => {
-			console.log(`Connection for [${this.wsUrl}] closed`);
+			writeInfo(`Connection for [${this.wsUrl}] closed`);
+			this.socket = null;
 		});
 		
-		this.socket.on('message', cb);
+		return Rx.Observable.fromEvent(this.socket, 'message');
 	}
 	
-	stop() {
-		this.socket.close();
+	async stop() {
+		if (this.retryTimeout) clearTimeout(this.retryTimeout);
+		if(this.socket) {
+			this.socket.close();
+			await waitFor(() => this.socket === null, 2000);
+		}
 	}
 }
 

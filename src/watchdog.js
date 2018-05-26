@@ -1,27 +1,31 @@
+const Rx = require('rxjs');
 const ExplorerListener = require('./explorerListener');
-const creepMinerDataReader = require('./creepMinerDataReader');
 const MinerListener = require('./minerListener');
 const keyListener = require('./keyListener');
 const config = require('./config');
+const {writeInfo, wait} = require('./utils');
+const handler = require('./handler');
 
 const minerListener = new MinerListener(config.MinerWebsocketUrl);
 const explorerListener = new ExplorerListener(config.ExplorerApiUrl);
 
-async function exitHandler() {
-	console.log("Stopping listener...");
-	minerListener.stop();
-	await explorerListener.stop();
+const $events = Rx.Observable
+	.merge(
+		minerListener.start().map(d => ({miner: d.data})),
+		explorerListener.start().map(d => ({explorer: d}))
+	);
+
+async function exit() {
+	writeInfo("Stopping listener...");
+	await minerListener.stop();
+	//await wait(2000);
 	process.exit(0);
 }
 
-keyListener
-	.onEscape(exitHandler)
-	.onControlC(exitHandler);
+keyListener.start()
+	.filter(({name, sequence}) => name === 'escape' || sequence === '\u0003')
+	.subscribe(exit);
 
-minerListener.start( data => {
-	console.log('received data');
-});
 
-explorerListener.start( lastBlocks => {
-	console.log(lastBlocks.length > 0 ? lastBlocks[0] : "Nothing returned");
-} );
+$events.subscribe(handler);
+
