@@ -8,7 +8,7 @@ class BurstExplorerListener {
 		this.explorerBaseUrl = explorerBaseUrl;
 	}
 	
-	start(cb) {
+	start() {
 		const api =  new ExplorerApi(this.explorerBaseUrl);
 		return Rx.Observable
 			.interval(REQUEST_INTERVAL)
