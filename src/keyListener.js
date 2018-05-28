@@ -8,7 +8,7 @@ class KeyListener {
 		process.stdin.setRawMode(true);
 	}
 	
-	start() {
+	listen() {
 		return Rx.Observable.fromEventPattern(
 			(handler) => {
 				process.stdin.on('keypress', handler)
