@@ -15,4 +15,22 @@ stappo.update(() => ({
 	})
 );
 
+stappo.updateBlockFn = (name) => (blockHeight) => {
+	const currentState = stappo.get();
+	stappo.update((s) => ({
+			...currentState,
+			[name]: {
+				updateTimestamp: Date.now(),
+				blockHeight
+			}
+			
+		})
+	)
+};
+
+stappo.updateBlock = function (name, blockHeight) {
+	stappo.updateBlockFn(name)(blockHeight);
+};
+
+
 module.exports = stappo;

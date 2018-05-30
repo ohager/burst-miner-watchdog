@@ -1,57 +1,26 @@
-const ExplorerListener = require('./explorerListener');
-const WebSocketListener = require('./websocketListener');
+const BlockExplorer = require('./blockExplorer');
+const MinerListener = require('./minerListener');
 const MinerProcess = require('./minerProcess');
+const Rx = require('rxjs');
+const {filter, scan, map, pluck, distinctUntilChanged} = require('rxjs/operators');
 const keyListener = require('./keyListener');
 const config = require('./config');
 const {writeInfo, writeWarning, writeError} = require('./utils');
-const eventStreamHandler = require('./eventStreamHandler');
 const state = require('./state');
 
 const minerProcess = new MinerProcess(config.MinerExe);
-const explorerListener = new ExplorerListener(config.ExplorerApiUrl);
-const socketListener = {
-	miner: new WebSocketListener(config.MinerWebsocketUrl, 'miner'),
-	pool: new WebSocketListener(config.PoolWebsocketUrl, 'pool')
-};
+const blockExplorer = new BlockExplorer(config.ExplorerApiUrl);
+const miner = new MinerListener(config.MinerWebsocketUrl);
 
-function isSocketMessageEvent(name) {
-	return (e) => e[name] && e[name].type === 'message';
-}
+const $keys = keyListener.listen();
+const $explorerBlockHeights = blockExplorer.lastBlocks().pluck('height').do(state.updateBlockFn('explorer'));
 
-function isUnexpectedSocketCloseEvent({name, event}) {
-	const e = event[name];
-	if (e && e.type === 'close' && e.type !== 1000) {
-		writeWarning("Unexpected connection loss...reconnecting");
-		setTimeout(listenSocket.bind(null, name), 3000);
-		return true;
-	}
-	return false;
-}
 
-function listenSocket(name) {
-	socketListener[name]
-		.start()
-		.map(d => ({[name]: d}))
-		.takeWhile(e => !isUnexpectedSocketCloseEvent({
-			name: name,
-			event: e
-		}))
-		.filter(isSocketMessageEvent(name))
-		.subscribe(eventStreamHandler);
-}
+const $fakeBlocks = Rx.Observable.interval(1000)
+	.scan((acc, curr) => ++acc, 0)
+	.do(state.updateBlockFn('fake'));
 
-function errorStreamHandler(e) {
-	writeError(`Explorer Fetch Error: ${e}`);
-	writeInfo("Restarting Explorer");
-	setTimeout(listenExplorer, 3000);
-}
-
-function listenExplorer() {
-	const name = 'explorer';
-	explorerListener.start()
-		.map(d => ({[name]: d}))
-		.subscribe(eventStreamHandler, errorStreamHandler);
-}
+const $minerBlockHeights = miner.blockheights().do(state.updateBlockFn('miner'));
 
 async function exit() {
 	writeInfo("Exiting Watchdog...", "[BYE]");
@@ -59,29 +28,42 @@ async function exit() {
 	process.exit(0);
 }
 
-
 function printState() {
 	writeInfo(`\n\n${JSON.stringify(state.get(), null, 4)}\n`, "[STATE]");
 }
 
-keyListener.listen()
-	.filter(({name, sequence}) => name === 'escape' || sequence === '\u0003')
-	.subscribe(exit);
-
-keyListener.listen()
-	.filter(({name}) => name === 's')
-	.subscribe(printState);
-
+const $exitEvent = $keys.filter(({name, sequence}) => name === 'escape' || sequence === '\u0003');
 
 async function initialize() {
 	
 	writeInfo("Initializing watchdog...");
 	const isRunning = await minerProcess.isRunning();
-	await minerProcess.start();
-	// start socket listener delayed, to guarantee that miner doesn't shut down
-	setTimeout(() => listenSocket('miner'), 2000);
-	listenSocket('pool');
-	listenExplorer();
+	if (!isRunning) await minerProcess.start();
+	
+	const logEvent = e => writeInfo(JSON.stringify(e, null, 4), '[EVENT]');
+	const split = map(e => ({miner: e[0], explorer: e[1]}));
+	const distinctHeightsOnly = distinctUntilChanged((p, c) => {
+		return p.miner === c.miner && p.explorer === c.explorer
+	});
+	const isExplorerBeforeMiner = filter(h => h.explorer > h.miner);
+	const minerBehindExplorer = Rx.pipe(
+		split,
+		distinctHeightsOnly,
+		isExplorerBeforeMiner,
+	);
+	
+	$fakeBlocks.combineLatest($explorerBlockHeights)
+		.let(minerBehindExplorer)
+		.takeUntil( $exitEvent )
+		.subscribe(logEvent);
+	
 }
 
 initialize();
+
+$exitEvent.subscribe(() => setTimeout(exit, 5000));
+
+$keys.filter(({name}) => name === 's')
+	.subscribe(printState);
+
+

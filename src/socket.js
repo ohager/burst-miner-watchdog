@@ -2,11 +2,11 @@ const WebSocket = require('ws');
 const Rx = require('rxjs');
 const {writeError, writeSuccess, writeInfo} = require('./utils');
 
-class WebSocketListener {
+class Socket {
 	constructor(url, name) {
 		this.name = name;
 		this.wsUrl = url;
-		this.socket = null;
+		this.socket = new WebSocket(this.wsUrl);
 		this.requestedStop = false;
 		this.retryTimeout = null;
 	}
@@ -15,6 +15,23 @@ class WebSocketListener {
 		return `'${this.name}'@[${this.wsUrl}]`;
 	}
 	
+	events(name){
+		return Rx.Observable.fromEvent(this.socket, 'message');
+	}
+	
+	messageEvents() {
+		return this.events('message');
+	}
+	
+	errorEvents(){
+		return this.events('error');
+	}
+	
+	closeEvents(){
+		return this.events('close');
+	}
+	
+	/*
 	start() {
 		this.requestedStop = false;
 		this.socket = new WebSocket(this.wsUrl);
@@ -34,13 +51,10 @@ class WebSocketListener {
 		this.socket.on('close', () => {
 			writeInfo(`Connection ${this.connectionName} closed`);
 		});
-		
-		return Rx.Observable.merge(
-			Rx.Observable.fromEvent(this.socket, 'message'),
-			Rx.Observable.fromEvent(this.socket, 'close')
-		)
-		
+
+		return Rx.Observable.fromEvent(this.socket, 'message');
 	}
+	*/
 }
 
-module.exports = WebSocketListener;
+module.exports = Socket;
