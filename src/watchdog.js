@@ -155,7 +155,7 @@ class Watchdog {
 			.let(isExplorerBeforeMiner);
 		
 		this.subscriptions.add('$needRestartMinerEvent',
-			$needRestartMinerEvent.do(logBehindExplorer).subscribe(this.__restartMiner)
+			$needRestartMinerEvent.do(logBehindExplorer).subscribe(this.__restartMiner, (e)=> writeError(e))
 		);
 		
 		this.__handleUnexpectedEvents();
