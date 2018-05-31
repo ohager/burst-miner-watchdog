@@ -1,28 +1,27 @@
 const chalk = require('chalk');
 const {format} = require('date-fns');
 const error = chalk.bold.red;
-const highlight = chalk.bold.white;
+const bright = chalk.bold.white;
 const success = chalk.keyword('green');
 const info = chalk.bold.blueBright;
 const warn = chalk.bold.yellowBright;
 
-const timestamped = (tag) => `${highlight(format(new Date()))} - ${tag}`;
-
+const timestamped = (tag) => `${bright(format(new Date()))} - ${tag}`;
 
 function writeError(msg) {
-	console.error(timestamped(error('[ERROR]')), highlight(msg));
+	console.error(timestamped(error('[ERROR]')), bright(msg));
 }
 
 function writeSuccess(msg, tag = '[OK]') {
-	console.log(timestamped(success(tag)), highlight(msg));
+	console.log(timestamped(success(tag)), bright(msg));
 }
 
 function writeInfo(msg, tag = '[INFO]') {
-	console.info(timestamped(info(tag)), highlight(msg));
+	console.info(timestamped(info(tag)), bright(msg));
 }
 
 function writeWarning(msg, tag = '[WARN]') {
-	console.info(timestamped(warn(tag)), highlight(msg));
+	console.info(timestamped(warn(tag)), bright(msg));
 }
 
 async function wait(timeout) {
@@ -31,27 +30,10 @@ async function wait(timeout) {
 	});
 }
 
-async function waitFor(predicate, timeout) {
-	return new Promise(resolve => {
-		let started = Date.now();
-		setTimeout(() => {
-			if (predicate()) {
-				resolve(true);
-			}
-			
-			if (Date.now() - started >= timeout) {
-				resolve(false);
-			}
-		}, 250);
-	});
-}
-
-
 module.exports = {
 	writeError,
 	writeSuccess,
 	writeInfo,
 	writeWarning,
 	wait,
-	waitFor
 };

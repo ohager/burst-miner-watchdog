@@ -5,8 +5,6 @@ const findProcess = require('find-process');
 const config = require('./config');
 const {writeInfo, writeWarning, writeSuccess, wait} = require('./utils');
 
-const POLL_INTERVAL = 10 * 1000;
-
 class MinerProcess {
 	
 	constructor(execPath) {
@@ -15,7 +13,7 @@ class MinerProcess {
 		this.pingInterval = null;
 	}
 	
-	get processName(){
+	get processName() {
 		return path.basename(this.execPath);
 	}
 	
@@ -36,10 +34,10 @@ class MinerProcess {
 	async isRunning() {
 		const processes = await this.getRunningProcesses();
 		const isRunning = processes.length > 0;
-		if(isRunning){
+		if (isRunning) {
 			writeSuccess(`Miner process '${this.processName}' is running`, '[♥]')
 		}
-		else{
+		else {
 			writeWarning(`Miner process '${this.processName}' is not running`, '[♥]');
 		}
 		return isRunning;
@@ -50,8 +48,10 @@ class MinerProcess {
 	}
 	
 	async start() {
-		writeInfo(`Starting Miner process '${this.processName}'`);
-		await spawn(config.MinerExe, [], {detached: true, shell: true});
+		if (!await this.isRunning()) {
+			writeInfo(`Starting Miner process '${this.processName}'`);
+			await spawn(config.MinerExe, [], {detached: true, shell: true});
+		}
 		this.__poll();
 	}
 	
@@ -61,7 +61,7 @@ class MinerProcess {
 			clearInterval(this.pingInterval);
 		}
 		
-		if(keepChildAlive) return;
+		if (keepChildAlive) return;
 		
 		const processes = await this.getRunningProcesses();
 		processes.forEach(p => {
