@@ -55,13 +55,13 @@ class MinerProcess {
 		this.__poll();
 	}
 	
-	async stop(keepChildAlive = true) {
+	async stop({killChildProcess} = {killChildProcess: false}) {
 		
 		if (this.pingInterval) {
 			clearInterval(this.pingInterval);
 		}
 		
-		if (keepChildAlive) return;
+		if (!killChildProcess) return;
 		
 		const processes = await this.getRunningProcesses();
 		processes.forEach(p => {

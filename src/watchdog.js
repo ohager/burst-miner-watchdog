@@ -104,7 +104,7 @@ class Watchdog {
 	async __restartMiner() {
 		writeInfo("Restarting Miner...");
 		this.subscriptions.unsubscribe('$minerUnexpectedEvents', '$needRestartMinerEvent');
-		await this.minerProcess.stop(false);
+		await this.minerProcess.stop({killChildProcess:true});
 		await this.minerProcess.start();
 		state.updateRestart();
 		await wait(2000);
