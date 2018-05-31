@@ -13,14 +13,10 @@ const blockExplorer = new BlockExplorer(config.ExplorerApiUrl);
 const miner = new MinerListener(config.MinerWebsocketUrl);
 
 const $keys = keyListener.listen();
-const $explorerBlockHeights = blockExplorer.lastBlocks().pluck('height').do(state.updateBlockFn('explorer'));
-
 
 const $fakeBlocks = Rx.Observable.interval(1000)
-	.scan((acc, curr) => ++acc, 0)
+	.scan((acc, curr) => acc -= 500, 500000)
 	.do(state.updateBlockFn('fake'));
-
-const $minerBlockHeights = miner.blockheights().do(state.updateBlockFn('miner'));
 
 async function exit() {
 	writeInfo("Exiting Watchdog...", "[BYE]");
@@ -33,6 +29,11 @@ function printState() {
 }
 
 const $exitEvent = $keys.filter(({name, sequence}) => name === 'escape' || sequence === '\u0003');
+$exitEvent.subscribe(exit);
+
+$keys.filter(({name}) => name === 's')
+	.subscribe(printState);
+
 
 async function initialize() {
 	
@@ -40,11 +41,30 @@ async function initialize() {
 	const isRunning = await minerProcess.isRunning();
 	if (!isRunning) await minerProcess.start();
 	
-	const logEvent = e => writeInfo(JSON.stringify(e, null, 4), '[EVENT]');
+}
+
+
+let subscription = null;
+
+async function restart(){
+	writeInfo("Restarting...");
+	subscription.unsubscribe();
+	await minerProcess.stop(false);
+	await minerProcess.start();
+	setTimeout(listen, 2000);
+}
+
+function listen(){
+	
+	writeInfo("Start listening blocks");
+	
+	const $explorerBlockHeights = blockExplorer.lastBlocks().pluck('height').do(state.updateBlockFn('explorer'));
+	const $minerBlockHeights = miner.blockheights().do(state.updateBlockFn('miner'));
+	
+	const log = e => writeInfo(JSON.stringify(e, null, 4), '[EVENT]');
+	
 	const split = map(e => ({miner: e[0], explorer: e[1]}));
-	const distinctHeightsOnly = distinctUntilChanged((p, c) => {
-		return p.miner === c.miner && p.explorer === c.explorer
-	});
+	const distinctHeightsOnly = distinctUntilChanged((p, q) => p.miner === q.miner && p.explorer === q.explorer);
 	const isExplorerBeforeMiner = filter(h => h.explorer > h.miner);
 	const minerBehindExplorer = Rx.pipe(
 		split,
@@ -52,18 +72,18 @@ async function initialize() {
 		isExplorerBeforeMiner,
 	);
 	
-	$fakeBlocks.combineLatest($explorerBlockHeights)
+	const $needRestartMinerEvent = $fakeBlocks
+		.combineLatest($explorerBlockHeights)
 		.let(minerBehindExplorer)
-		.takeUntil( $exitEvent )
-		.subscribe(logEvent);
+		.takeUntil($exitEvent);
+	
+	subscription = $needRestartMinerEvent.do(log).subscribe( restart );
 	
 }
 
-initialize();
+async function run(){
+	await initialize();
+	listen();
+}
 
-$exitEvent.subscribe(() => setTimeout(exit, 5000));
-
-$keys.filter(({name}) => name === 's')
-	.subscribe(printState);
-
-
+run();
