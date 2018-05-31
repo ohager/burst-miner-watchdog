@@ -24,4 +24,4 @@ class KeyListener {
 	
 }
 
-module.exports = new KeyListener();
+module.exports = KeyListener;
