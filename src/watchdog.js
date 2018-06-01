@@ -34,6 +34,7 @@ function printHeader() {
 	console.log(blue(`-----------------------------------------------[${bright(author.name)}]---`));
 	console.log('\n');
 	console.log('Press \'h\' for additional commands');
+	console.log('\n');
 }
 
 function printHelp() {
@@ -155,7 +156,7 @@ class Watchdog {
 			.let(isExplorerBeforeMiner);
 		
 		this.subscriptions.add('$needRestartMinerEvent',
-			$needRestartMinerEvent.do(logBehindExplorer).subscribe(this.__restartMiner, (e)=> writeError(e))
+			$needRestartMinerEvent.do(logBehindExplorer).subscribe(this.__restartMiner)
 		);
 		
 		this.__handleUnexpectedEvents();
