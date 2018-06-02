@@ -2,15 +2,15 @@ const path = require('path');
 const {exec, spawn} = require('child_process');
 const process = require('process');
 const findProcess = require('find-process');
-const config = require('./config');
 const {writeInfo, writeWarning, writeSuccess, wait} = require('./utils');
 
 class MinerProcess {
 	
-	constructor(execPath) {
+	constructor(execPath, pingInterval) {
 		this.execPath = execPath;
-		this.execPath = execPath;
-		this.pingInterval = null;
+		this.pingInterval = pingInterval * 1000;
+		
+		this.pingIntervalHandler = null;
 	}
 	
 	get processName() {
@@ -19,16 +19,16 @@ class MinerProcess {
 	
 	__poll() {
 		
-		if (this.pingInterval) {
-			clearInterval(this.pingInterval);
+		if (this.pingIntervalHandler) {
+			clearInterval(this.pingIntervalHandler);
 		}
 		
-		this.pingInterval = setInterval(async () => {
+		this.pingIntervalHandler = setInterval(async () => {
 			const isRunning = await this.isRunning();
 			if (!isRunning) {
 				this.start();
 			}
-		}, config.MinerExePingInterval * 1000)
+		}, this.pingInterval)
 	}
 	
 	async isRunning() {
@@ -50,15 +50,15 @@ class MinerProcess {
 	async start() {
 		if (!await this.isRunning()) {
 			writeInfo(`Starting Miner process '${this.processName}'`);
-			await spawn(config.MinerExe, [], {detached: true, shell: true});
+			await spawn(this.execPath, [], {detached: true, shell: true});
 		}
 		this.__poll();
 	}
 	
 	async stop({killChildProcess} = {killChildProcess: false}) {
 		
-		if (this.pingInterval) {
-			clearInterval(this.pingInterval);
+		if (this.pingIntervalHandler) {
+			clearInterval(this.pingIntervalHandler);
 		}
 		
 		if (!killChildProcess) return;

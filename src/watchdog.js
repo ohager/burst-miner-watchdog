@@ -10,7 +10,6 @@ const MinerProcess = require('./minerProcess');
 const KeyListener = require('./keyListener');
 const SubscriptionManager = require('./subscriptionManager');
 
-const config = require('./config');
 const {writeInfo, writeWarning, writeError, wait} = require('./utils');
 const state = require('./state');
 
@@ -58,21 +57,22 @@ function printState() {
 	writeInfo(`\n\n${jsonString(state.get())}\n`, "[STATE]");
 }
 
-function printConfiguration(){
+function printConfiguration(config){
 	writeInfo(`\n\n${jsonString(config)}\n`, "[CONFIG]");
 }
 
 class Watchdog {
 	
-	constructor() {
+	constructor(config) {
 		
 		this.__initialize = this.__initialize.bind(this);
 		this.__handleBlockEvents = this.__handleBlockEvents.bind(this);
 		this.__exit = this.__exit.bind(this);
 		this.__restartMiner = this.__restartMiner.bind(this);
-		
+	
+		this.config = config;
 		this.subscriptions = new SubscriptionManager();
-		this.minerProcess = new MinerProcess(config.MinerExe);
+		this.minerProcess = new MinerProcess(config.miner.path, config.miner.pingInterval);
 		this.blockExplorer = null;
 		this.miner = null;
 		
@@ -80,7 +80,7 @@ class Watchdog {
 		
 		const keyListener = new KeyListener();
 		this.$keys = keyListener.listen();
-		this.$keys.filter(isKey('c')).subscribe(printConfiguration);
+		this.$keys.filter(isKey('c')).subscribe(printConfiguration.bind(null, config));
 		this.$keys.filter(isKey('s')).subscribe(printState);
 		this.$keys.filter(isKey('h')).subscribe(printHelp);
 		this.$keys.filter(isKey('r')).subscribe(this.__restartMiner);
@@ -131,8 +131,10 @@ class Watchdog {
 		
 		writeInfo("Start listening blocks");
 		
-		this.blockExplorer = new BlockExplorer(config.ExplorerApiUrl);
-		this.miner = new MinerListener(config.MinerWebsocketUrl);
+		const {miner, explorer} = this.config;
+		
+		this.blockExplorer = new BlockExplorer(explorer.apiUrl, explorer.pollInterval);
+		this.miner = new MinerListener(miner.websocketUrl);
 		
 		const $explorerBlockHeights = this.blockExplorer.lastBlocks().pluck('height').do(state.updateBlockFn('explorer'));
 		const $minerBlockHeights = this.miner.blockheights().do(state.updateBlockFn('miner'));
@@ -168,7 +170,4 @@ class Watchdog {
 		this.__handleBlockEvents();
 	}
 }
-
-const watchdog = new Watchdog();
-watchdog.run();
-
+module.exports = Watchdog;

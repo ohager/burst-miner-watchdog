@@ -30,6 +30,7 @@
     "semver": "^5.5.0"
   },
   "dependencies": {
+    "args": "^4.0.0",
     "axios": "^0.18.0",
     "chalk": "^2.4.1",
     "cli-highlight": "^2.0.0",
@@ -52,8 +53,8 @@
     "build": "babel src --out-dir bin --copy-files",
     "test:dev": "cross-env NODE_ENV=test jest",
     "test": "cross-env NODE_ENV=test jest --coverage && codecov",
-    "start": "cross-env NODE_ENV=development node ./src/watchdog.js",
-    "start:qa": "cross-env NODE_ENV=qa node ./src/watchdog.js",
+    "start": "cross-env NODE_ENV=development node ./src/main.js",
+    "start:qa": "cross-env NODE_ENV=qa node ./src/main.js",
     "release": "npm run test:dev && npm run build && node ./tools/tag.js"
   }
 }
