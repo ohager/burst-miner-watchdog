@@ -1,8 +1,13 @@
 {
+  "logger":{
+    "enabled" : true,
+    "level": "verbose"
+  },
   "miner": {
     "path": "\"C:\\Program Files\\creepMiner 1.8.0\\creepMiner.exe\"",
     "websocketUrl": "ws://localhost:8124/",
-    "pingInterval": 300
+    "pingInterval": 300,
+    "autoClose" : true
   },
   "explorer": {
     "pollInterval": 10,

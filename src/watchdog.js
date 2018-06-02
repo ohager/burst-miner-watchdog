@@ -10,7 +10,7 @@ const MinerProcess = require('./minerProcess');
 const KeyListener = require('./keyListener');
 const SubscriptionManager = require('./subscriptionManager');
 
-const {writeInfo, writeWarning, writeError, wait} = require('./utils');
+const {writeDebug, writeWarning, writeInfo, writeError, writeSuccess, wait} = require('./utils');
 const state = require('./state');
 
 const $fakeBlocks = Rx.Observable.interval(1000)
@@ -43,9 +43,10 @@ function printHelp() {
 		console.log(`\t${bright(key)}\t- ${description}`);
 	}
 	
-	writeWarning('Following keys are available:\n', '[HELP]');
+	writeDebug('Following keys are available:\n', '[HELP]');
 	writeKey('c', 'Shows current configuration');
 	writeKey('h', 'Prints this help');
+	writeKey('l', 'Toggles through logger settings');
 	writeKey('r', 'Restarts miner manually');
 	writeKey('s', 'Show current state');
 	writeKey('ESC or Ctrl-C', 'Exit');
@@ -54,25 +55,43 @@ function printHelp() {
 }
 
 function printState() {
-	writeInfo(`\n\n${jsonString(state.get())}\n`, "[STATE]");
+	let currentState = {...state.get()};
+	delete currentState.config;
+	writeDebug(`\n\n${jsonString(currentState)}\n`, "[STATE]");
 }
 
-function printConfiguration(config){
-	writeInfo(`\n\n${jsonString(config)}\n`, "[CONFIG]");
+function printConfiguration() {
+	writeDebug(`\n\n${jsonString(state.getConfig())}\n`, "[CONFIG]");
+}
+
+function toggleLogger() {
+	const {level, enabled} = state.getConfig().logger;
+	const stages = ['off', 'debug', 'info', 'verbose', 'warn', 'error'];
+	
+	const index = stages.findIndex(stage => stage === level);
+	
+	
+	const stage = stages[index === -1 ? 0 : (index + 1) % stages.length];
+	
+	const nextLoggerConfig = stage === 'off' ? {level: "off", enabled: false} : {level: stage, enabled: true};
+	console.log(index, nextLoggerConfig)
+	state.updateLogger(nextLoggerConfig);
+	writeDebug(`\n${jsonString(state.getConfig().logger)}\n`, '[LOGGER]');
 }
 
 class Watchdog {
 	
-	constructor(config) {
+	constructor() {
 		
 		this.__initialize = this.__initialize.bind(this);
 		this.__handleBlockEvents = this.__handleBlockEvents.bind(this);
+		this.__handleMinerErrors = this.__handleMinerErrors.bind(this);
 		this.__exit = this.__exit.bind(this);
 		this.__restartMiner = this.__restartMiner.bind(this);
-	
-		this.config = config;
+		
+		this.config = state.getConfig();
 		this.subscriptions = new SubscriptionManager();
-		this.minerProcess = new MinerProcess(config.miner.path, config.miner.pingInterval);
+		this.minerProcess = new MinerProcess(this.config.miner.path, this.config.miner.pingInterval);
 		this.blockExplorer = null;
 		this.miner = null;
 		
@@ -80,7 +99,8 @@ class Watchdog {
 		
 		const keyListener = new KeyListener();
 		this.$keys = keyListener.listen();
-		this.$keys.filter(isKey('c')).subscribe(printConfiguration.bind(null, config));
+		this.$keys.filter(isKey('c')).subscribe(printConfiguration);
+		this.$keys.filter(isKey('l')).subscribe(toggleLogger);
 		this.$keys.filter(isKey('s')).subscribe(printState);
 		this.$keys.filter(isKey('h')).subscribe(printHelp);
 		this.$keys.filter(isKey('r')).subscribe(this.__restartMiner);
@@ -105,7 +125,7 @@ class Watchdog {
 	async __restartMiner() {
 		writeInfo("Restarting Miner...");
 		this.subscriptions.unsubscribe('$minerUnexpectedEvents', '$needRestartMinerEvent');
-		await this.minerProcess.stop({killChildProcess:true});
+		await this.minerProcess.stop({killChildProcess: true});
 		await this.minerProcess.start();
 		state.updateRestart();
 		await wait(2000);
@@ -121,10 +141,19 @@ class Watchdog {
 		this.subscriptions.add('$minerUnexpectedEvents',
 			$minerCloseEvents
 				.do(logCloseEvent)
-				.merge($minerErrorEvents.do(writeError))
+				.merge($minerErrorEvents.do(this.__handleMinerErrors))
 				.takeUntil(this.$exitEvent)
 				.subscribe(this.__restartMiner)
 		);
+	}
+	
+	__handleMinerErrors(e) {
+		writeError(e.message);
+		if(e.error.errno === 'ECONNREFUSED')
+		{
+			writeError('Cannot connect to miner. Check your configuration');
+			this.__exit();
+		}
 	}
 	
 	__handleBlockEvents() {
@@ -139,8 +168,9 @@ class Watchdog {
 		const $explorerBlockHeights = this.blockExplorer.lastBlocks().pluck('height').do(state.updateBlockFn('explorer'));
 		const $minerBlockHeights = this.miner.blockheights().do(state.updateBlockFn('miner'));
 		
-		const logBlockEvent = e => writeInfo(`Block:\n${jsonString(e)}`);
-		const logBehindExplorer = e => writeWarning(`Miner Block is less than Explorer:\n${jsonString(e)}`);
+		const blockString = e => `Blocks - Miner: ${e.miner}, Explorer: ${e.explorer}`;
+		const logBlockEvent = e => writeSuccess(`${blockString(e)}`, '[✓]');
+		const logBehindExplorer = e => writeWarning(`Miner Block is less than Explorer:\n${blockString(e)}`);
 		
 		const split = map(e => ({miner: e[0], explorer: e[1]}));
 		const distinctHeightsOnly = distinctUntilChanged((p, q) => p.miner === q.miner && p.explorer === q.explorer);
@@ -170,4 +200,5 @@ class Watchdog {
 		this.__handleBlockEvents();
 	}
 }
+
 module.exports = Watchdog;

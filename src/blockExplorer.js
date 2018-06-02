@@ -1,10 +1,6 @@
 const Rx = require('rxjs');
-const chalk = require('chalk');
 const ExplorerApi = require('./explorerApi');
-const config = require('../config');
 const {writeError} = require('./utils');
-
-const bright = chalk.bold.yellowBright;
 
 class BlockExplorer {
 	constructor(explorerBaseUrl, pollInterval) {
@@ -13,16 +9,16 @@ class BlockExplorer {
 	}
 	
 	__retryStrategy($errors) {
-		return $errors.do( (err) =>{
-			writeError(`Explorer has a problem:\n\t${bright(err)}`);
-		} ).delay(5 * this.pollInterval)
+		return $errors.do((err) => {
+			writeError(`Explorer has a problem:\n\t${err}`);
+		}).delay(5 * this.pollInterval)
 	}
 	
 	lastBlocks() {
 		const api = new ExplorerApi(this.explorerBaseUrl);
 		return Rx.Observable
 			.interval(this.pollInterval)
-			.flatMap(i =>
+			.flatMap(() =>
 				Rx.Observable.fromPromise(api.getLastBlock())
 			)
 			.retryWhen(this.__retryStrategy)

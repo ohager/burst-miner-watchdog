@@ -11,6 +11,12 @@ const defaultState = () => ({
 
 // initialize
 stappo.update(() => ({
+		config: {
+			logger : {
+				enabled : true,
+				level : "debug"
+			}
+		},
 		miner: defaultState(),
 		explorer: defaultState(),
 		restart: {
@@ -21,8 +27,7 @@ stappo.update(() => ({
 );
 
 stappo.updateBlockFn = (name) => (blockHeight) => {
-	const currentState = stappo.get();
-	stappo.update(() => ({
+	stappo.update((currentState) => ({
 			...currentState,
 			[name]: {
 				updateDateTime: isoDateNow(),
@@ -38,8 +43,7 @@ stappo.updateBlock = function (name, blockHeight) {
 };
 
 stappo.updateRestart = function () {
-	const currentState = stappo.get();
-	stappo.update(() => ({
+	stappo.update((currentState) => ({
 			restart: {
 				count: ++currentState.restart.count,
 				updateDateTime: isoDateNow(),
@@ -48,5 +52,29 @@ stappo.updateRestart = function () {
 	);
 };
 
+stappo.updateConfig = function (config) {
+	stappo.update(() => ({
+			config
+		})
+	);
+};
+
+stappo.updateLogger = function (logger) {
+	const config = this.getConfig();
+	stappo.update(() => ({
+			config: {
+				...config,
+				logger :{
+					...config.logger,
+					...logger
+				}
+			}
+		})
+	);
+};
+
+stappo.getConfig = function () {
+	return stappo.get().config;
+};
 
 module.exports = stappo;

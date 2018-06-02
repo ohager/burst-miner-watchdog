@@ -1,27 +1,35 @@
-const chalk = require('chalk');
-const {format} = require('date-fns');
-const error = chalk.bold.red;
-const bright = chalk.bold.white;
-const success = chalk.keyword('green');
-const info = chalk.bold.blueBright;
-const warn = chalk.bold.yellowBright;
+const Logger = require('./logger');
 
-const timestamped = (tag) => `${bright(format(new Date()))} - ${tag}`;
+let logger = null;
+
+function log(level, msg, tag) {
+	
+	//lazy instantiation
+	if (!logger) {
+		logger = new Logger();
+	}
+	
+	logger.log(level, msg, {tag});
+}
 
 function writeError(msg) {
-	console.error(timestamped(error('[ERROR]')), bright(msg));
+	log('error', msg, '[ERROR]');
 }
 
 function writeSuccess(msg, tag = '[OK]') {
-	console.log(timestamped(success(tag)), bright(msg));
+	log('verbose', msg, tag);
 }
 
 function writeInfo(msg, tag = '[INFO]') {
-	console.info(timestamped(info(tag)), bright(msg));
+	log('info', msg, tag);
 }
 
 function writeWarning(msg, tag = '[WARN]') {
-	console.info(timestamped(warn(tag)), bright(msg));
+	log('warn', msg, tag);
+}
+
+function writeDebug(msg, tag = '[DEBUG]') {
+	log('debug', msg, tag);
 }
 
 async function wait(timeout) {
@@ -35,5 +43,7 @@ module.exports = {
 	writeSuccess,
 	writeInfo,
 	writeWarning,
+	writeDebug,
 	wait,
+	
 };

@@ -58,6 +58,9 @@ typings/
 yarn.lock
 
 #custom
+.babelrc
+.travis.yml
+.idea
 src/
 tests/
 tools/
