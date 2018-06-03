@@ -4,6 +4,7 @@ const {version, author} = require('../package.json');
 const {filter, scan, map, pluck, distinctUntilChanged} = require('rxjs/operators');
 const {highlight} = require('cli-highlight');
 
+const $ = require('./stateSelectors');
 const BlockExplorer = require('./blockExplorer');
 const MinerListener = require('./minerListener');
 const MinerProcess = require('./minerProcess');
@@ -112,7 +113,7 @@ class Watchdog {
 	async __exit() {
 		writeInfo("Exiting Watchdog...", "[BYE]");
 		this.subscriptions.unsubscribeAll();
-		await this.minerProcess.stop();
+		await this.minerProcess.stop({killChildProcess: $.selectIsAutoClose()});
 		process.exit(0);
 	}
 	

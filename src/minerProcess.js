@@ -1,5 +1,5 @@
 const path = require('path');
-const {exec, spawn} = require('child_process');
+const {spawn} = require('child_process');
 const process = require('process');
 const findProcess = require('find-process');
 const {writeInfo, writeWarning, writeSuccess, wait} = require('./utils');
@@ -7,7 +7,7 @@ const {writeInfo, writeWarning, writeSuccess, wait} = require('./utils');
 class MinerProcess {
 	
 	constructor(execPath, pingInterval) {
-		this.execPath = execPath;
+		this.execPath = process.platform === 'win32' ? `"${execPath}"` : execPath;
 		this.pingInterval = pingInterval * 1000;
 		
 		this.pingIntervalHandler = null;
