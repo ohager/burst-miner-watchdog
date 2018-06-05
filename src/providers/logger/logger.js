@@ -3,10 +3,8 @@ const path = require('path');
 const {format} = require('date-fns');
 const winston = require('winston');
 const chalk = require('chalk');
-const state = require('./state');
-const $ = require('./stateSelectors');
+const {updaters, selectors : $, state} = require('../../state');
 const bright = chalk.bold.white;
-
 
 const colorize = (level, text) => {
 	const colors = {
@@ -28,6 +26,7 @@ class Logger {
 		}
 		
 		const logFile = path.join(logDir, `${format(Date.now(), 'YYYYMMDD_hhmmss')}.log`);
+		
 		
 		const logTransports = {
 			file: new (winston.transports.File)({filename: logFile, level: $.selectLoggerLevel() || 'verbose'}),
@@ -52,7 +51,7 @@ class Logger {
 			]
 		});
 		
-		state.updateLogger({logFile});
+		updaters.loggerUpdater({logFile});
 		
 		state.listen(() => {
 			const level = $.selectLoggerLevel();

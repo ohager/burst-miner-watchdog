@@ -12,5 +12,6 @@
   "explorer": {
     "pollInterval": 10,
     "apiUrl": "https://explore.burst.cryptoguru.org/api/v1/"
-  }
+  },
+  "failuresUntilGiveup" : 5
 }

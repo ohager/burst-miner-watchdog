@@ -1,5 +1,6 @@
 const Rx = require('rxjs');
 const readline = require('readline');
+const process = require('process');
 
 class KeyListener {
 	

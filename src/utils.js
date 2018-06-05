@@ -1,14 +1,17 @@
-const Logger = require('./logger');
+const highlight = require('cli-highlight');
+const loggerProvider = require('./providers/logger');
 
 let logger = null;
 
+function highlightJson(jsonObj) {
+	return highlight(JSON.stringify(jsonObj, null, 4), {language: 'json'});
+}
+
 function log(level, msg, tag) {
-	
 	//lazy instantiation
 	if (!logger) {
-		logger = new Logger();
+		logger = loggerProvider();
 	}
-	
 	logger.log(level, msg, {tag});
 }
 
@@ -38,12 +41,13 @@ async function wait(timeout) {
 	});
 }
 
+
 module.exports = {
+	highlightJson,
 	writeError,
 	writeSuccess,
 	writeInfo,
 	writeWarning,
 	writeDebug,
 	wait,
-	
 };

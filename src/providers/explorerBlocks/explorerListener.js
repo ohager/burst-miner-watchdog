@@ -1,8 +1,8 @@
 const Rx = require('rxjs');
 const ExplorerApi = require('./explorerApi');
-const {writeError} = require('./utils');
+const {logError} = require('../../effects/errors');
 
-class BlockExplorer {
+class ExplorerListener {
 	constructor(explorerBaseUrl, pollInterval) {
 		this.__retryStrategy = this.__retryStrategy.bind(this);
 		
@@ -10,11 +10,9 @@ class BlockExplorer {
 		this.pollInterval = pollInterval * 1000;
 	}
 	
-	__retryStrategy($errors) {
+	__retryStrategy(error$) {
 		const interval = 5 * this.pollInterval;
-		return $errors.do((err) => {
-			writeError(`Explorer has a problem:\n\t${err}`);
-		}).delay(5 * interval)
+		return error$.do(logError).delay(interval)
 	}
 	
 	lastBlocks() {
@@ -28,4 +26,4 @@ class BlockExplorer {
 	}
 }
 
-module.exports = BlockExplorer;
+module.exports = ExplorerListener;

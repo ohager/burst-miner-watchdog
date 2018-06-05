@@ -1,9 +1,8 @@
 const fs = require('fs');
-const path = require('path');
 const Ajv = require('ajv');
 const chalk = require('chalk');
 const {highlight} = require('cli-highlight');
-const state = require('./state');
+const {updaters} = require('./state');
 
 function printError(brief, detail){
 	const red = chalk.bold.redBright;
@@ -34,8 +33,13 @@ require('ajv-errors')(ajv);
 
 
 const configSchema = {
-	required: ['logger','miner'],
+	required: ['logger','miner','failuresUntilGiveup'],
 	properties: {
+		failuresUntilGiveup : {
+			type: 'number',
+			minimum: 3,
+			maximum: 50
+		},
 		logger: {
 			type: 'object',
 			required: ['enabled','level'],
@@ -123,7 +127,7 @@ function load(configFileName) {
 	validateConfigJson(configObj);
 	validateConfigPaths(configObj);
 	
-	state.updateConfig(configObj);
+	updaters.configUpdater(configObj);
 	
 }
 

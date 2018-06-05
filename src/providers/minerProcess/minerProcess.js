@@ -1,16 +1,37 @@
+const process = require('process');
 const path = require('path');
 const {spawn} = require('child_process');
-const process = require('process');
 const findProcess = require('find-process');
-const {writeInfo, writeWarning, writeSuccess, wait} = require('./utils');
+
+const {writeInfo, writeWarning, writeSuccess} = require('../../utils');
+
+function windowsify(path) {
+	if(process.platform !== 'win32') return path;
+	
+	let windowsPath = path;
+	if (!windowsPath.startsWith('\"')){
+		windowsPath = `\"${windowsPath}`;
+	}
+	if (!windowsPath.endsWith('\"')){
+		windowsPath += '\"';
+	}
+	
+	return windowsPath;
+}
 
 class MinerProcess {
 	
 	constructor(execPath, pingInterval) {
-		this.execPath = process.platform === 'win32' ? `"${execPath}"` : execPath;
+		this.execPath =windowsify(execPath);
 		this.pingInterval = pingInterval * 1000;
 		
 		this.pingIntervalHandler = null;
+	}
+	
+	get workingDir() {
+		const cwd = path.dirname(this.execPath);
+		console.log(this.workingDir);
+		return cwd;
 	}
 	
 	get processName() {
@@ -50,6 +71,8 @@ class MinerProcess {
 	async start() {
 		if (!await this.isRunning()) {
 			writeInfo(`Starting Miner process '${this.processName}'`);
+			const workingDir = windowsify(path.dirname(this.execPath));
+			console.log(workingDir + "\"");
 			await spawn(this.execPath, [], {detached: true, shell: true});
 		}
 		this.__poll();

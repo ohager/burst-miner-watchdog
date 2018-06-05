@@ -1,6 +1,5 @@
 const WebSocket = require('ws');
 const Rx = require('rxjs');
-const {writeError, writeSuccess, writeInfo} = require('./utils');
 
 class Socket {
 	constructor(url, name) {

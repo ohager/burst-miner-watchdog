@@ -1,26 +1,23 @@
 const Rx = require('rxjs');
 const chalk = require('chalk');
 const {version, author} = require('../package.json');
-const {filter, scan, map, pluck, distinctUntilChanged} = require('rxjs/operators');
-const {highlight} = require('cli-highlight');
 
-const $ = require('./stateSelectors');
-const BlockExplorer = require('./blockExplorer');
-const MinerListener = require('./minerListener');
-const MinerProcess = require('./minerProcess');
-const KeyListener = require('./keyListener');
-const SubscriptionManager = require('./subscriptionManager');
+const {selectors: $, updaters} = require('./state');
 
-const {writeDebug, writeWarning, writeInfo, writeError, writeSuccess, wait} = require('./utils');
-const state = require('./state');
+const keyEffects = require('./effects/keys');
+const blockEffects = require('./effects/blocks');
+const errorEffects = require('./effects/errors');
+const blockOperations = require('./operations/blocks');
+const errorOperations = require('./operations/errors');
+const keyOperations = require('./operations/keys');
 
-const $fakeBlocks = Rx.Observable.interval(1000)
+
+const {writeWarning, writeInfo, writeError, writeSuccess, wait} = require('./utils');
+
+const $fakeBlocks = Rx.Observable.interval(500)
 	.scan((acc, curr) => acc -= 500, 500000)
-	.do(state.updateBlockFn('fake'));
+	.do(updaters.createBlockUpdater('fake'));
 
-function jsonString(jsonObj) {
-	return highlight(JSON.stringify(jsonObj, null, 4), {language: 'json'});
-}
 
 function printHeader() {
 	const bright = chalk.bold.white;
@@ -37,84 +34,34 @@ function printHeader() {
 	console.log('\n');
 }
 
-function printHelp() {
-	const bright = chalk.bold.white;
-	
-	function writeKey(key, description) {
-		console.log(`\t${bright(key)}\t- ${description}`);
-	}
-	
-	writeDebug('Following keys are available:\n', '[HELP]');
-	writeKey('c', 'Shows current configuration');
-	writeKey('h', 'Prints this help');
-	writeKey('l', 'Toggles through logger settings');
-	writeKey('r', 'Restarts miner manually');
-	writeKey('s', 'Show current state');
-	writeKey('ESC or Ctrl-C', 'Exit');
-	
-	console.log('\n');
-}
-
-function printState() {
-	let currentState = {...state.get()};
-	delete currentState.config;
-	writeDebug(`\n\n${jsonString(currentState)}\n`, "[STATE]");
-}
-
-function printConfiguration() {
-	writeDebug(`\n\n${jsonString(state.getConfig())}\n`, "[CONFIG]");
-}
-
-function toggleLogger() {
-	const {level, enabled} = state.getConfig().logger;
-	const stages = ['off', 'debug', 'info', 'verbose', 'warn', 'error'];
-	
-	const index = stages.findIndex(stage => stage === level);
-	
-	
-	const stage = stages[index === -1 ? 0 : (index + 1) % stages.length];
-	
-	const nextLoggerConfig = stage === 'off' ? {level: "off", enabled: false} : {level: stage, enabled: true};
-	console.log(index, nextLoggerConfig)
-	state.updateLogger(nextLoggerConfig);
-	writeDebug(`\n${jsonString(state.getConfig().logger)}\n`, '[LOGGER]');
-}
 
 class Watchdog {
 	
-	constructor() {
+	constructor({keysProvider, minerBlocksProvider, explorerBlocksProvider, minerProcessProvider}) {
+		
+		const b = (fn) => {
+			fn = fn.bind(this);
+		};
 		
 		this.__initialize = this.__initialize.bind(this);
-		this.__handleBlockEvents = this.__handleBlockEvents.bind(this);
-		this.__handleMinerErrors = this.__handleMinerErrors.bind(this);
+		this.__handleEvents = this.__handleEvents.bind(this);
 		this.__exit = this.__exit.bind(this);
 		this.__restartMiner = this.__restartMiner.bind(this);
 		
-		this.config = state.getConfig();
-		this.subscriptions = new SubscriptionManager();
-		this.minerProcess = new MinerProcess(this.config.miner.path, this.config.miner.pingInterval);
-		this.blockExplorer = null;
-		this.miner = null;
+		const {key} = keyOperations;
+		this.key$ = keysProvider();
+		this.key$.let(key('c')).subscribe(keyEffects.printConfiguration);
+		this.key$.let(key('l')).subscribe(keyEffects.toggleLogger);
+		this.key$.let(key('s')).subscribe(keyEffects.printState);
+		this.key$.let(key('h')).subscribe(keyEffects.printHelp);
+		this.key$.let(key('r')).subscribe(this.__restartMiner);
+
+		this.config = $.selectConfig();
 		
-		const isKey = (k) => ({name}) => name === k;
+		this.minerProcess = minerProcessProvider(this.config.miner.path, this.config.miner.pingInterval);
+		this.explorerBlocksProvider = explorerBlocksProvider;
+		this.minerBlocksProvider = minerBlocksProvider;
 		
-		const keyListener = new KeyListener();
-		this.$keys = keyListener.listen();
-		this.$keys.filter(isKey('c')).subscribe(printConfiguration);
-		this.$keys.filter(isKey('l')).subscribe(toggleLogger);
-		this.$keys.filter(isKey('s')).subscribe(printState);
-		this.$keys.filter(isKey('h')).subscribe(printHelp);
-		this.$keys.filter(isKey('r')).subscribe(this.__restartMiner);
-		
-		this.$exitEvent = this.$keys.filter(({name, sequence}) => name === 'escape' || sequence === '\u0003');
-		this.subscriptions.add('$exitEvent', this.$exitEvent.subscribe(this.__exit));
-	}
-	
-	async __exit() {
-		writeInfo("Exiting Watchdog...", "[BYE]");
-		this.subscriptions.unsubscribeAll();
-		await this.minerProcess.stop({killChildProcess: $.selectIsAutoClose()});
-		process.exit(0);
 	}
 	
 	async __initialize() {
@@ -122,83 +69,76 @@ class Watchdog {
 		writeInfo("Initializing Watchdog...");
 		await this.minerProcess.start();
 	}
+
+	async __exit() {
+		writeInfo("Exiting Watchdog...", "[BYE]");
+		this.subscriptions.unsubscribeAll();
+		await this.minerProcess.stop({killChildProcess: $.selectIsAutoClose()});
+		process.exit(0);
+	}
 	
 	async __restartMiner() {
 		writeInfo("Restarting Miner...");
-		this.subscriptions.unsubscribe('$minerUnexpectedEvents', '$needRestartMinerEvent');
+		updaters.restartUpdater();
 		await this.minerProcess.stop({killChildProcess: true});
 		await this.minerProcess.start();
-		state.updateRestart();
-		await wait(2000);
-		this.__handleBlockEvents();
+		await wait(5000);
+		this.__handleEvents();
 	}
 	
-	__handleUnexpectedEvents() {
-		const $minerCloseEvents = this.miner.closeEvents();
-		const $minerErrorEvents = this.miner.errorEvents();
-		
-		const logCloseEvent = () => writeWarning(`${this.miner.connectionName} has closed connection...`);
-		
-		this.subscriptions.add('$minerUnexpectedEvents',
-			$minerCloseEvents
-				.do(logCloseEvent)
-				.merge($minerErrorEvents.do(this.__handleMinerErrors))
-				.takeUntil(this.$exitEvent)
-				.subscribe(this.__restartMiner)
-		);
-	}
-	
-	__handleMinerErrors(e) {
-		writeError(e.message);
-		if(e.error.errno === 'ECONNREFUSED')
-		{
-			writeError('Cannot connect to miner. Check your configuration');
-			this.__exit();
-		}
-	}
-	
-	__handleBlockEvents() {
+	__handleEvents() {
 		
 		writeInfo("Start listening blocks");
 		
 		const {miner, explorer} = this.config;
+		const explorerBlocks = this.explorerBlocksProvider(explorer.apiUrl, explorer.pollInterval);
+		const minerBlocks = this.minerBlocksProvider(miner.websocketUrl);
 		
-		this.blockExplorer = new BlockExplorer(explorer.apiUrl, explorer.pollInterval);
-		this.miner = new MinerListener(miner.websocketUrl);
+		const {exitKey} = keyOperations;
+		const {connectionError} = errorOperations;
+		const {purify, isExplorerBeforeMiner} = blockOperations;
+		const {logBlockEvent, logBehindExplorer, logCloseEvent, updateMinerBlockState, updateExplorerBlockState} = blockEffects;
+		const {logError} = errorEffects;
 		
-		const $explorerBlockHeights = this.blockExplorer.lastBlocks().pluck('height').do(state.updateBlockFn('explorer'));
-		const $minerBlockHeights = this.miner.blockheights().do(state.updateBlockFn('miner'));
+		const explorerBlockHeight$ = explorerBlocks.pluck('height').do(updateExplorerBlockState);
+		const minerBlockHeight$ = minerBlocks.do(updateMinerBlockState);
+		const minerClose$ = minerBlocks.closeEvents().do(logCloseEvent);
+		const minerError$ = minerBlocks.errorEvents().do(logError);
 		
-		const blockString = e => `Blocks - Miner: ${e.miner}, Explorer: ${e.explorer}`;
-		const logBlockEvent = e => writeSuccess(`${blockString(e)}`, '[✓]');
-		const logBehindExplorer = e => writeWarning(`Miner Block is less than Explorer:\n${blockString(e)}`);
-		
-		const split = map(e => ({miner: e[0], explorer: e[1]}));
-		const distinctHeightsOnly = distinctUntilChanged((p, q) => p.miner === q.miner && p.explorer === q.explorer);
-		const isExplorerBeforeMiner = filter(h => h.explorer > h.miner);
-		const purify = Rx.pipe(
-			split,
-			distinctHeightsOnly,
-		);
-		
-		const $needRestartMinerEvent = $minerBlockHeights
-			.combineLatest($explorerBlockHeights)
-			.takeUntil(this.$exitEvent)
+		const requireRestart$ = minerBlockHeight$
+			.combineLatest(explorerBlockHeight$)
 			.let(purify)
 			.do(logBlockEvent)
-			.let(isExplorerBeforeMiner);
+			.let(isExplorerBeforeMiner)
+			.do(logBehindExplorer);
 		
-		this.subscriptions.add('$needRestartMinerEvent',
-			$needRestartMinerEvent.do(logBehindExplorer).subscribe(this.__restartMiner)
-		);
+		const exitRequest$ = this.key$.let(exitKey);
 		
-		this.__handleUnexpectedEvents();
+		const minerConnectionError$ = minerError$
+			.let(connectionError);
+		
+		const exit$ = minerConnectionError$
+			.merge(exitRequest$, requireRestart$)
+			.do(this.__exit)
+			.first();
+		
+		const giveUp$ = $fakeBlocks
+			.bufferTime(2000)
+			.do(writeInfo)
+			.filter(e => e.length > 3);
+
+//		giveUp$.subscribe((e) => writeInfo(e, '[Give Up]') );
+		
+		minerClose$
+			.merge(minerError$, requireRestart$)
+			.takeUntil(exit$)
+			.subscribe(this.__restartMiner);
 	}
 	
 	async run() {
 		await this.__initialize();
 		await wait(2000);
-		this.__handleBlockEvents();
+		this.__handleEvents();
 	}
 }
 
