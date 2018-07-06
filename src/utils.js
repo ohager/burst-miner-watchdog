@@ -1,5 +1,5 @@
-const highlight = require('cli-highlight');
-const loggerProvider = require('./providers/logger');
+const {highlight} = require('cli-highlight');
+const Logger = require('@/logger');
 
 let logger = null;
 
@@ -10,9 +10,14 @@ function highlightJson(jsonObj) {
 function log(level, msg, tag) {
 	//lazy instantiation
 	if (!logger) {
-		logger = loggerProvider();
+		logger = new Logger();
 	}
-	logger.log(level, msg, {tag});
+	
+	try {
+		logger.log(level, msg, {tag});
+	}catch(e){
+		console.error(e)
+	}
 }
 
 function writeError(msg) {

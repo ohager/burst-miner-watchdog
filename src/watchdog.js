@@ -4,12 +4,12 @@ const {version, author} = require('../package.json');
 
 const {selectors: $, updaters} = require('./state');
 
-const keyEffects = require('./effects/keys');
-const blockEffects = require('./effects/blocks');
-const errorEffects = require('./effects/errors');
-const blockOperations = require('./operations/blocks');
-const errorOperations = require('./operations/errors');
-const keyOperations = require('./operations/keys');
+const keyEffects = require('@streams/effects/keys');
+const blockEffects = require('@streams/effects/blocks');
+const errorEffects = require('@streams/effects/errors');
+const blockOperations = require('@streams/operations/blocks');
+const errorOperations = require('@streams/operations/errors');
+const keyOperations = require('@streams/operations/keys');
 
 
 const {writeWarning, writeInfo, writeError, writeSuccess, wait} = require('./utils');
@@ -50,6 +50,7 @@ class Watchdog {
 		
 		const {key} = keyOperations;
 		this.key$ = keysProvider();
+		
 		this.key$.let(key('c')).subscribe(keyEffects.printConfiguration);
 		this.key$.let(key('l')).subscribe(keyEffects.toggleLogger);
 		this.key$.let(key('s')).subscribe(keyEffects.printState);
@@ -72,7 +73,6 @@ class Watchdog {
 
 	async __exit() {
 		writeInfo("Exiting Watchdog...", "[BYE]");
-		this.subscriptions.unsubscribeAll();
 		await this.minerProcess.stop({killChildProcess: $.selectIsAutoClose()});
 		process.exit(0);
 	}
@@ -88,22 +88,23 @@ class Watchdog {
 	
 	__handleEvents() {
 		
-		writeInfo("Start listening blocks");
+		//writeInfo("Start listening blocks");
 		
 		const {miner, explorer} = this.config;
-		const explorerBlocks = this.explorerBlocksProvider(explorer.apiUrl, explorer.pollInterval);
-		const minerBlocks = this.minerBlocksProvider(miner.websocketUrl);
 		
-		const {exitKey} = keyOperations;
+		const explorerBlocks = this.explorerBlocksProvider(explorer.apiUrl, explorer.pollInterval);
+		const {block$, error$, close$} = this.minerBlocksProvider(miner.websocketUrl);
+		
+		const {exitKey, key} = keyOperations;
 		const {connectionError} = errorOperations;
 		const {purify, isExplorerBeforeMiner} = blockOperations;
 		const {logBlockEvent, logBehindExplorer, logCloseEvent, updateMinerBlockState, updateExplorerBlockState} = blockEffects;
 		const {logError} = errorEffects;
 		
 		const explorerBlockHeight$ = explorerBlocks.pluck('height').do(updateExplorerBlockState);
-		const minerBlockHeight$ = minerBlocks.do(updateMinerBlockState);
-		const minerClose$ = minerBlocks.closeEvents().do(logCloseEvent);
-		const minerError$ = minerBlocks.errorEvents().do(logError);
+		const minerBlockHeight$ = block$.do(updateMinerBlockState);
+		const minerClose$ = close$.do(logCloseEvent);
+		const minerError$ = error$.do(logError);
 		
 		const requireRestart$ = minerBlockHeight$
 			.combineLatest(explorerBlockHeight$)
@@ -112,32 +113,35 @@ class Watchdog {
 			.let(isExplorerBeforeMiner)
 			.do(logBehindExplorer);
 		
-		const exitRequest$ = this.key$.let(exitKey);
+		this.key$.let(exitKey).subscribe(async () => {
+			console.log("Ende?");
+			await this.__exit()
+		});
 		
 		const minerConnectionError$ = minerError$
 			.let(connectionError);
-		
+		/*
 		const exit$ = minerConnectionError$
 			.merge(exitRequest$, requireRestart$)
 			.do(this.__exit)
 			.first();
-		
+
 		const giveUp$ = $fakeBlocks
 			.bufferTime(2000)
 			.do(writeInfo)
 			.filter(e => e.length > 3);
 
 //		giveUp$.subscribe((e) => writeInfo(e, '[Give Up]') );
-		
+*/
 		minerClose$
 			.merge(minerError$, requireRestart$)
-			.takeUntil(exit$)
+		//	.takeUntil(exitRequest$)
 			.subscribe(this.__restartMiner);
 	}
 	
 	async run() {
 		await this.__initialize();
-		await wait(2000);
+		await wait(3000);
 		this.__handleEvents();
 	}
 }

@@ -3,7 +3,7 @@ const path = require('path');
 const {format} = require('date-fns');
 const winston = require('winston');
 const chalk = require('chalk');
-const {updaters, selectors : $, state} = require('../../state');
+const {updaters, selectors : $, state} = require('@/state');
 const bright = chalk.bold.white;
 
 const colorize = (level, text) => {
@@ -53,7 +53,7 @@ class Logger {
 		
 		updaters.loggerUpdater({logFile});
 		
-		state.listen(() => {
+		state.get(() => {
 			const level = $.selectLoggerLevel();
 			logTransports.file.level = level;
 			this.logger.transports.file.silent = level === "off"

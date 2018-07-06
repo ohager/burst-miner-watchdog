@@ -2,14 +2,14 @@ const Rx = require('rxjs');
 const readline = require('readline');
 const process = require('process');
 
-class KeyListener {
+class KeyObservable {
 	
 	constructor() {
 		readline.emitKeypressEvents(process.stdin);
 		process.stdin.setRawMode(true);
 	}
 	
-	listen() {
+	get() {
 		return Rx.Observable.fromEventPattern(
 			(handler) => {
 				process.stdin.on('keypress', handler)
@@ -25,4 +25,4 @@ class KeyListener {
 	
 }
 
-module.exports = KeyListener;
+module.exports = KeyObservable;

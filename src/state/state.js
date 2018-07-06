@@ -1,6 +1,6 @@
 const StappoClass = require('stappo');
-const stappo = new StappoClass();
 const {format} = require('date-fns');
+const stappo = new StappoClass();
 
 function timestamped(obj, fieldName = 'dateTime') {
 	return {

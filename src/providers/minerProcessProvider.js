@@ -1,4 +1,4 @@
-const MinerProcess = require('./minerProcess');
+const MinerProcess = require('@/minerProcess');
 
 function provider(execPath, pingInterval) {
 	return new MinerProcess(execPath, pingInterval);

@@ -20,6 +20,10 @@
     "type": "git",
     "url": "https://github.com/ohager/burst-miner-watchdog.git"
   },
+  "_moduleAliases": {
+    "@": "./src",
+    "@streams": "./src/streams"
+  },
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-preset-stage-2": "^6.24.1",
@@ -29,6 +33,13 @@
     "jest": "^23.0.0",
     "semver": "^5.5.0"
   },
+  "jest": {
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "@/(.*)$": "<rootDir>/src/$1",
+      "@streams/(.*)$": "<rootDir>/src/streams/$1"
+    }
+  },
   "dependencies": {
     "ajv": "^6.5.0",
     "ajv-errors": "^1.0.0",
@@ -37,8 +48,9 @@
     "chalk": "^2.4.1",
     "cli-highlight": "^2.0.0",
     "date-fns": "^1.29.0",
-    "find-process": "^1.1.1",
     "lodash": "^4.17.10",
+    "module-alias": "^2.1.0",
+    "ps-list": "^4.1.0",
     "rxjs": "^5.5.11",
     "stappo": "^0.0.7",
     "winston": "^2.4.2",

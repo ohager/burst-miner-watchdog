@@ -1,13 +1,11 @@
-const minerBlocksProvider = require('./minerBlocks');
-const explorerBlocksProvider = require('./explorerBlocks');
-const keysProvider = require('./keys');
-const loggerProvider = require('./logger');
-const minerProcessProvider = require('./minerProcess');
+const minerBlocksProvider = require('./minerBlocksProvider');
+const explorerBlocksProvider = require('./explorerBlocksProvider');
+const keysProvider = require('./keysProvider');
+const minerProcessProvider = require('./minerProcessProvider');
 
 module.exports = {
 	minerBlocksProvider,
 	explorerBlocksProvider,
 	keysProvider,
-	loggerProvider,
 	minerProcessProvider,
 };

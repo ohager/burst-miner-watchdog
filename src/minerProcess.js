@@ -1,18 +1,18 @@
 const process = require('process');
 const path = require('path');
 const {spawn} = require('child_process');
-const findProcess = require('find-process');
+const listProcesses = require('ps-list');
 
-const {writeInfo, writeWarning, writeSuccess} = require('../../utils');
+const {writeInfo, writeWarning, writeSuccess} = require('@/utils');
 
 function windowsify(path) {
-	if(process.platform !== 'win32') return path;
+	if (process.platform !== 'win32') return path;
 	
 	let windowsPath = path;
-	if (!windowsPath.startsWith('\"')){
+	if (!windowsPath.startsWith('\"')) {
 		windowsPath = `\"${windowsPath}`;
 	}
-	if (!windowsPath.endsWith('\"')){
+	if (!windowsPath.endsWith('\"')) {
 		windowsPath += '\"';
 	}
 	
@@ -22,16 +22,14 @@ function windowsify(path) {
 class MinerProcess {
 	
 	constructor(execPath, pingInterval) {
-		this.execPath =windowsify(execPath);
+		this.execPath = execPath;
 		this.pingInterval = pingInterval * 1000;
 		
 		this.pingIntervalHandler = null;
 	}
 	
 	get workingDir() {
-		const cwd = path.dirname(this.execPath);
-		console.log(this.workingDir);
-		return cwd;
+		return path.dirname(this.execPath);
 	}
 	
 	get processName() {
@@ -54,26 +52,30 @@ class MinerProcess {
 	
 	async isRunning() {
 		const processes = await this.getRunningProcesses();
+		
 		const isRunning = processes.length > 0;
 		if (isRunning) {
-			writeSuccess(`Miner process '${this.processName}' is running`, '[♥]')
+			writeSuccess(`Miner process [${this.processName}] is running`, '[♥]')
 		}
 		else {
-			writeWarning(`Miner process '${this.processName}' is not running`, '[♥]');
+			writeWarning(`Miner process [${this.processName}] is not running`, '[♥]');
 		}
 		return isRunning;
 	}
 	
 	async getRunningProcesses() {
-		return await findProcess('name', this.processName);
+		const processes = await listProcesses();
+		return processes.filter( ({name}) => name.toLowerCase() === this.processName.toLowerCase() );
 	}
 	
 	async start() {
 		if (!await this.isRunning()) {
-			writeInfo(`Starting Miner process '${this.processName}'`);
-			const workingDir = windowsify(path.dirname(this.execPath));
-			console.log(workingDir + "\"");
-			await spawn(this.execPath, [], {detached: true, shell: true});
+			await spawn(windowsify(this.execPath), [], {
+				detached: true,
+				shell: true,
+				windowsVerbatimArguments: true,
+				cwd: this.workingDir
+			});
 		}
 		this.__poll();
 	}

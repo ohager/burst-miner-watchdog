@@ -1,8 +1,8 @@
 const Rx = require('rxjs');
-const ExplorerApi = require('./explorerApi');
-const {logError} = require('../../effects/errors');
+const ExplorerApi = require('@/explorerApi');
+const {logError} = require('@streams/effects/errors');
 
-class ExplorerListener {
+class ExplorerObervable {
 	constructor(explorerBaseUrl, pollInterval) {
 		this.__retryStrategy = this.__retryStrategy.bind(this);
 		
@@ -26,4 +26,4 @@ class ExplorerListener {
 	}
 }
 
-module.exports = ExplorerListener;
+module.exports = ExplorerObervable;

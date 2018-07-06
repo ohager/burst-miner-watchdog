@@ -2,7 +2,7 @@ const fs = require('fs');
 const Ajv = require('ajv');
 const chalk = require('chalk');
 const {highlight} = require('cli-highlight');
-const {updaters} = require('./state');
+const {updaters} = require('@/state');
 
 function printError(brief, detail){
 	const red = chalk.bold.redBright;

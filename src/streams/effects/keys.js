@@ -1,7 +1,12 @@
-const {state, selectors : $, updaters} = require('../state');
-const {writeDebug, highlightJson} = require('../utils');
+const chalk = require('chalk');
+const {state} = require('@/state');
+const $ = require('@/state/selectors');
+const {loggerUpdater} = require('@/state/updaters');
+const {writeDebug, highlightJson} = require('@/utils');
+
 
 function printHelp() {
+	
 	const bright = chalk.bold.white;
 	
 	function writeKey(key, description) {
@@ -22,7 +27,12 @@ function printHelp() {
 function printState() {
 	let currentState = {...state.get()};
 	delete currentState.config;
+	try{
+	
 	writeDebug(`\n\n${highlightJson(currentState)}\n`, "[STATE]");
+	}catch(e){
+		console.error(e);
+	}
 }
 
 function printConfiguration() {
@@ -37,7 +47,7 @@ function toggleLogger() {
 	const stage = stages[index === -1 ? 0 : (index + 1) % stages.length];
 	
 	const nextLoggerConfig = stage === 'off' ? {level: "off", enabled: false} : {level: stage, enabled: true};
-	updaters.loggerUpdater(nextLoggerConfig);
+	loggerUpdater(nextLoggerConfig);
 	writeDebug(`\n${highlightJson($.selectLogger())}\n`, '[LOGGER]');
 }
 

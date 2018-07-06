@@ -1,9 +1,11 @@
+require('module-alias/register');
+
 const path = require('path');
 const args = require('args');
-const config = require('./config');
-const WatchDog = require('./watchdog');
+const config = require('@/config');
+const WatchDog = require('@/watchdog');
 
-const providers = require('./providers');
+const providers = require('@/providers');
 
 args.option("config", "The configuration file to be used", path.join(__dirname, "../config.json"));
 
