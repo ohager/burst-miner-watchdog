@@ -40,6 +40,10 @@ function writeDebug(msg, tag = '[DEBUG]') {
 	log('debug', msg, tag);
 }
 
+function isDevelopmentMode(){
+	return process.env.NODE_ENV === 'development'
+}
+
 async function wait(timeout) {
 	return new Promise(resolve => {
 		setTimeout(resolve, timeout);
@@ -55,4 +59,5 @@ module.exports = {
 	writeWarning,
 	writeDebug,
 	wait,
+	isDevelopmentMode
 };

@@ -6,8 +6,6 @@ class Socket {
 		this.name = name;
 		this.wsUrl = url;
 		this.socket = new WebSocket(this.wsUrl);
-		this.requestedStop = false;
-		this.retryTimeout = null;
 	}
 	
 	get connectionName() {
