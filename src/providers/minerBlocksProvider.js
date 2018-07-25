@@ -1,5 +1,5 @@
 const {isDevelopmentMode} = require('@/utils');
-const MinerListener = isDevelopmentMode() ? require('@streams/observables/simulation/minerObservable') : require('@streams/observables/minerObservable');
+const MinerListener = require(`@streams/observables/${isDevelopmentMode() ? 'simulation/' : ''}minerObservable`);
 
 function provider(url) {
 	const minerListener = new MinerListener(url);

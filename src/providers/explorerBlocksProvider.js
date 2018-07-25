@@ -1,4 +1,5 @@
-const ExplorerObservable = require('@streams/observables/explorerObervable');
+const {isDevelopmentMode} = require('@/utils');
+const ExplorerObservable = require(`@streams/observables/${isDevelopmentMode() ? 'simulation/' : ''}explorerObervable`);
 
 function provider(baseUrl, pollInterval) {
 	return new ExplorerObservable(baseUrl, pollInterval).lastBlocks();

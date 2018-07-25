@@ -94,21 +94,10 @@ class Watchdog {
 		const {miner, explorer} = this.config;
 		
 		const {block$, error$, close$} = this.minerBlocksProvider(miner.websocketUrl);
-		const {logBlockEvent, logBehindExplorer, logCloseEvent, updateMinerBlockState, updateExplorerBlockState} = blockEffects;
+		const explorerBlocks = this.explorerBlocksProvider(explorer.apiUrl, explorer.pollInterval);
 		const {logError} = errorEffects;
 		
-		const minerBlockHeight$ = block$.do(updateMinerBlockState);
-		const minerClose$ = close$.do(logCloseEvent);
-		const minerError$ = error$.do(logError);
-
-		minerBlockHeight$.subscribe(console.log);
-		minerClose$.subscribe(() =>{});
-		minerError$.subscribe(() =>{});
-		
-		/*
-		const explorerBlocks = this.explorerBlocksProvider(explorer.apiUrl, explorer.pollInterval);
-		
-		const {exitKey, key} = keyOperations;
+		const {exitKey} = keyOperations;
 		const {connectionError} = errorOperations;
 		const {purify, isExplorerBeforeMiner} = blockOperations;
 		const {logBlockEvent, logBehindExplorer, logCloseEvent, updateMinerBlockState, updateExplorerBlockState} = blockEffects;
@@ -125,30 +114,20 @@ class Watchdog {
 			.let(isExplorerBeforeMiner)
 			.do(logBehindExplorer);
 		
-		this.key$.let(exitKey).subscribe(async () => {
-			await this.__exit()
-		});
+		const exitRequest$ = this.key$.let(exitKey);
 		
 		const minerConnectionError$ = minerError$
 			.let(connectionError);
-		/*
+
 		const exit$ = minerConnectionError$
 			.merge(exitRequest$, requireRestart$)
 			.do(this.__exit)
 			.first();
 
-		const giveUp$ = $fakeBlocks
-			.bufferTime(2000)
-			.do(writeInfo)
-			.filter(e => e.length > 3);
-
-//		giveUp$.subscribe((e) => writeInfo(e, '[Give Up]') );
-
 		minerClose$
 			.merge(minerError$, requireRestart$)
-			//	.takeUntil(exitRequest$)
+			.takeUntil(exit$)
 			.subscribe(this.__restartMiner);
-			*/
 	}
 	
 	async run() {

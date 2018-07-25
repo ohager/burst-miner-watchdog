@@ -1,9 +1,13 @@
 const KeyObservable = require('@streams/observables/keyObservable');
 const {sequence} = require('@streams/operations/keys');
+const {writeDebug} = require('@/utils');
 
-const INC_BLOCK = '+';
-const DEC_BLOCK = '-';
+const INC_BLOCK = '8';
+const DEC_BLOCK = '9';
 const RESET_BLOCK = '0';
+
+const RAISE_ERROR = '6';
+const CLOSE_CONNECTION = '7';
 
 const allowedBlockKeys = ({sequence}) => [INC_BLOCK, DEC_BLOCK, RESET_BLOCK].indexOf(sequence) >= 0;
 
@@ -29,18 +33,18 @@ class MinerSimulationObservable {
 		return this.key$
 			.filter(allowedBlockKeys)
 			.scan(keyReducer, 0)
-			.map(n => ({block: n}));
+			.do(blockHeight => writeDebug(`Miner Block: ${blockHeight}`, '[TEST]'))
 	}
 	
 	errorEvents() {
 		return this.key$
-			.let(sequence('\u001be')) // Alt-e
-			.map(() => "MinerSimulationObservable: Just a test exception");
+			.let(sequence(RAISE_ERROR))
+			.map(() => 'MinerSimulationObservable: Just a test exception');
 	}
 	
 	closeEvents() {
 		return this.key$
-			.let(sequence('\u001bc')); // Alt-c
+			.let(sequence(CLOSE_CONNECTION));
 	}
 }
 
