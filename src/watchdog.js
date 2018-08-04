@@ -120,16 +120,10 @@ class Watchdog {
 		
 		const requireRestart$ = minerBlockHeight$
 			.combineLatest(explorerBlockHeight$)
-			.takeUntil(exitRequest$)
-			.subscribe(console.log)
-			/*
 			.let(purify)
 			.do(logBlockEvent)
 			.let(isExplorerBeforeMiner)
 			.do(logBehindExplorer);
-		
-		
-		
 		
 		const minerConnectionError$ = minerError$
 			.let(connectionError);
@@ -143,7 +137,6 @@ class Watchdog {
 			.merge(minerError$, requireRestart$)
 			.takeUntil(exit$)
 			.subscribe(this.__restartMiner);
-			*/
 	}
 	
 	async run() {
