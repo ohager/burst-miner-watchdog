@@ -1,15 +1,26 @@
-const KeyObservable = require('@streams/observables/keyObservable');
+const keysProvider = require('@/providers/keysProvider');
 const {sequence} = require('@streams/operations/keys');
+const {printHelp} = require('@streams/effects/keys');
 const {writeDebug} = require('@/utils');
 
-const INC_BLOCK = '8';
-const DEC_BLOCK = '9';
-const RESET_BLOCK = '0';
+const INC_BLOCK = ',';
+const DEC_BLOCK = '.';
+const RESET_BLOCK = '/';
 
-const RAISE_ERROR = '6';
-const CLOSE_CONNECTION = '7';
+const RAISE_ERROR = 'e';
+const CLOSE_CONNECTION = 'c';
+const SHOW_HELP = 'h';
 
-const allowedBlockKeys = ({sequence}) => [INC_BLOCK, DEC_BLOCK, RESET_BLOCK].indexOf(sequence) >= 0;
+const keyMap = {
+	[INC_BLOCK]: 'Increments Miner Block Height',
+	[DEC_BLOCK]: 'Decrements Miner Block Height',
+	[RESET_BLOCK]: 'Resets Miner Block Height to 0',
+	[RAISE_ERROR]: 'Raises a mocked exception',
+	[CLOSE_CONNECTION]: 'Closes the connection',
+	[SHOW_HELP]: 'Shows Miner Mock help',
+};
+
+const allowedBlockKeys = ({sequence}) => Object.keys(keyMap).indexOf(sequence) >= 0;
 
 function keyReducer(acc, {sequence}) {
 	switch (sequence) {
@@ -19,32 +30,40 @@ function keyReducer(acc, {sequence}) {
 			return acc ? --acc : 0;
 		case RESET_BLOCK:
 			return 0;
-		default: return acc;
+		case SHOW_HELP:
+			printHelp(keyMap, 'Miner Simulator');
+		default:
+			return acc;
 	}
 }
 
 class MinerSimulationObservable {
 	
-	constructor(){
-		this.key$ = new KeyObservable().get();
+	constructor() {
+		const key$ = keysProvider();
+		
+		this.block$ = key$
+			.filter(allowedBlockKeys)
+			.scan(keyReducer, 0)
+			.do(blockHeight => writeDebug(`Miner Block: ${blockHeight}`, '[TEST]'));
+		
+		this.error$ = key$
+			.let(sequence(RAISE_ERROR))
+			.map(() => 'MinerSimulationObservable: Just a test exception');
+		
+		this.close$ = key$.let(sequence(CLOSE_CONNECTION));
 	}
 	
 	blockEvents() {
-		return this.key$
-			.filter(allowedBlockKeys)
-			.scan(keyReducer, 0)
-			.do(blockHeight => writeDebug(`Miner Block: ${blockHeight}`, '[TEST]'))
+		return this.block$;
 	}
 	
 	errorEvents() {
-		return this.key$
-			.let(sequence(RAISE_ERROR))
-			.map(() => 'MinerSimulationObservable: Just a test exception');
+		return this.error$;
 	}
 	
 	closeEvents() {
-		return this.key$
-			.let(sequence(CLOSE_CONNECTION));
+		return this.close$;
 	}
 }
 

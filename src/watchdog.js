@@ -1,4 +1,3 @@
-const Rx = require('rxjs');
 const chalk = require('chalk');
 const {version, author} = require('../package.json');
 const {isDevelopmentMode} = require('./utils');
@@ -11,13 +10,7 @@ const blockOperations = require('@streams/operations/blocks');
 const errorOperations = require('@streams/operations/errors');
 const keyOperations = require('@streams/operations/keys');
 
-
 const {writeWarning, writeInfo, writeError, writeSuccess, wait} = require('./utils');
-
-const $fakeBlocks = Rx.Observable.interval(500)
-	.scan((acc, curr) => acc -= 500, 500000)
-	.do(updaters.createBlockUpdater('fake'));
-
 
 function printHeader() {
 	const bright = chalk.bold.white;
@@ -36,9 +29,23 @@ function printHeader() {
 	console.log('Press \'h\' for additional commands');
 	console.log('\n');
 	
-	
 }
 
+
+const PRINT_CONFIG = 'c';
+const PRINT_HELP = 'h';
+const TOGGLE_LOGGER = 'l';
+const RESTART_MINER = 'r';
+const SHOW_STATE = 's';
+
+const keyMap = {
+	[PRINT_CONFIG]: 'Shows current configuration',
+	[PRINT_HELP]: 'Prints this help',
+	[TOGGLE_LOGGER]: 'Toggles through logger settings',
+	[RESTART_MINER]: 'Toggles through logger settings',
+	[SHOW_STATE]: 'Toggles through logger settings',
+	'ESC, CTRL-C' : 'Exit'
+};
 
 class Watchdog {
 	
@@ -49,14 +56,16 @@ class Watchdog {
 		this.__exit = this.__exit.bind(this);
 		this.__restartMiner = this.__restartMiner.bind(this);
 		
-		const {key} = keyOperations;
+		const {forKey} = keyOperations;
 		this.key$ = keysProvider();
 		
-		this.key$.let(key('c')).subscribe(keyEffects.printConfiguration);
-		this.key$.let(key('l')).subscribe(keyEffects.toggleLogger);
-		this.key$.let(key('s')).subscribe(keyEffects.printState);
-		this.key$.let(key('h')).subscribe(keyEffects.printHelp);
-		this.key$.let(key('r')).subscribe(this.__restartMiner);
+		this.key$
+			.do(forKey(PRINT_CONFIG)(keyEffects.printConfiguration))
+			.do(forKey(TOGGLE_LOGGER)(keyEffects.toggleLogger))
+			.do(forKey(SHOW_STATE)(keyEffects.printState))
+			.do(forKey(PRINT_HELP)(() => keyEffects.printHelp(keyMap)))
+			.do(forKey(RESTART_MINER)(this.__restartMiner, this))
+			.subscribe();
 		
 		this.config = $.selectConfig();
 		
@@ -79,11 +88,12 @@ class Watchdog {
 	}
 	
 	async __restartMiner() {
+		this.restartSubscription.unsubscribe();
 		writeInfo("Restarting Miner...");
 		updaters.restartUpdater();
 		await this.minerProcess.stop({killChildProcess: true});
 		await this.minerProcess.start();
-		await wait(5000);
+		await wait(2000);
 		this.__handleEvents();
 	}
 	
@@ -106,28 +116,34 @@ class Watchdog {
 		const minerBlockHeight$ = block$.do(updateMinerBlockState);
 		const minerClose$ = close$.do(logCloseEvent);
 		const minerError$ = error$.do(logError);
+		const exitRequest$ = this.key$.let(exitKey).do(this.__exit);
 		
 		const requireRestart$ = minerBlockHeight$
 			.combineLatest(explorerBlockHeight$)
+			.takeUntil(exitRequest$)
+			.subscribe(console.log)
+			/*
 			.let(purify)
 			.do(logBlockEvent)
 			.let(isExplorerBeforeMiner)
 			.do(logBehindExplorer);
 		
-		const exitRequest$ = this.key$.let(exitKey);
+		
+		
 		
 		const minerConnectionError$ = minerError$
 			.let(connectionError);
-
+		
 		const exit$ = minerConnectionError$
 			.merge(exitRequest$, requireRestart$)
 			.do(this.__exit)
 			.first();
-
-		minerClose$
+		
+		this.restartSubscription = minerClose$
 			.merge(minerError$, requireRestart$)
 			.takeUntil(exit$)
 			.subscribe(this.__restartMiner);
+			*/
 	}
 	
 	async run() {

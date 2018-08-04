@@ -1,11 +1,21 @@
-const KeyObservable = require('@streams/observables/keyObservable');
+const keysProvider = require('@/providers/keysProvider');
+const {printHelp} = require('@streams/effects/keys');
+const {forKey} = require('@streams/operations/keys');
 const {writeDebug} = require('@/utils');
 
-const INC_BLOCK = '\u001b8';
-const DEC_BLOCK = '\u001b9';
-const RESET_BLOCK = '\u001b0';
+const INC_BLOCK = '<';
+const DEC_BLOCK = '>';
+const RESET_BLOCK = '?';
+const SHOW_HELP = 'h';
 
-const allowedBlockKeys = ({sequence}) => [INC_BLOCK, DEC_BLOCK, RESET_BLOCK].indexOf(sequence) >= 0;
+const keyMap = {
+	[INC_BLOCK]: 'Increments Explorer Block Height',
+	[DEC_BLOCK]: 'Decrements Explorer Block Height',
+	[RESET_BLOCK]: 'Resets Explorer Block Height to 0',
+	[SHOW_HELP]: 'Shows Explorer Mock help',
+};
+
+const allowedBlockKeys = ({sequence}) => Object.keys(keyMap).indexOf(sequence) >= 0;
 
 function keyReducer(acc, {sequence}) {
 	switch (sequence) {
@@ -15,22 +25,26 @@ function keyReducer(acc, {sequence}) {
 			return acc ? --acc : 0;
 		case RESET_BLOCK:
 			return 0;
-		default: return acc;
+		default:
+			return acc;
 	}
 }
 
 class ExplorerSimulationObservable {
 	
-	constructor(){
-		this.key$ = new KeyObservable().get();
+	constructor() {
+		const key$ = keysProvider();
+		
+		this.lastBlock$ = key$
+			.filter(allowedBlockKeys)
+			.do(forKey(SHOW_HELP)(() => printHelp(keyMap, 'Explorer Simulator')))
+			.scan(keyReducer, 0)
+			.map(n => ({height: n}))
+			.do(({height}) => writeDebug("Explorer Block: " + height, '[TEST]'))
 	}
 	
 	lastBlocks() {
-		return this.key$
-			.filter(allowedBlockKeys)
-			.scan(keyReducer, 0)
-			.map(n => ({height: n}))
-			.do( ({height}) => writeDebug("Explorer Block: " + height, '[TEST]'))
+		return this.lastBlock$;
 		
 	}
 }

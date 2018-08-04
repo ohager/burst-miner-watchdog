@@ -4,22 +4,23 @@ const $ = require('@/state/selectors');
 const {loggerUpdater} = require('@/state/updaters');
 const {writeDebug, highlightJson} = require('@/utils');
 
+const bright = chalk.bold.white;
 
-function printHelp() {
-	
-	const bright = chalk.bold.white;
-	
-	function writeKey(key, description) {
-		console.log(`\t${bright(key)}\t- ${description}`);
-	}
+function writeKey(key, description) {
+	console.log(`\t${bright(key)}\t- ${description}`);
+}
+
+function printHelp(keymap, context = ""){
 	
 	writeDebug('Following keys are available:\n', '[HELP]');
-	writeKey('c', 'Shows current configuration');
-	writeKey('h', 'Prints this help');
-	writeKey('l', 'Toggles through logger settings');
-	writeKey('r', 'Restarts miner manually');
-	writeKey('s', 'Show current state');
-	writeKey('ESC or Ctrl-C', 'Exit');
+
+	if(context.length > 0){
+		console.log(`For ${context}\n`);
+	}
+	
+	Object.keys(keymap).forEach( k => {
+		writeKey(k, keymap[k]);
+	});
 	
 	console.log('\n');
 }
