@@ -1,14 +1,16 @@
+const path = require('path');
 const chalk = require('chalk');
 const {version, author} = require('../package.json');
 const {isDevelopmentMode} = require('./utils');
 const {selectors: $, updaters} = require('./state');
-
+const pluginLoader = require('@/pluginLoader');
 const keyEffects = require('@streams/effects/keys');
 const blockEffects = require('@streams/effects/blocks');
 const errorEffects = require('@streams/effects/errors');
 const blockOperations = require('@streams/operations/blocks');
 const errorOperations = require('@streams/operations/errors');
 const keyOperations = require('@streams/operations/keys');
+
 
 const {writeWarning, writeInfo, writeError, writeSuccess, wait} = require('./utils');
 
@@ -55,6 +57,9 @@ class Watchdog {
 		this.__handleEvents = this.__handleEvents.bind(this);
 		this.__exit = this.__exit.bind(this);
 		this.__restartMiner = this.__restartMiner.bind(this);
+		this.__callPlugins = this.__callPlugins.bind(this);
+		
+		this.plugins = pluginLoader.load(path.join(__dirname, './plugins'));
 		
 		const {forKey} = keyOperations;
 		this.key$ = keysProvider();
@@ -65,6 +70,7 @@ class Watchdog {
 			.do(forKey(SHOW_STATE)(keyEffects.printState))
 			.do(forKey(PRINT_HELP)(() => keyEffects.printHelp(keyMap)))
 			.do(forKey(RESTART_MINER)(this.__restartMiner, this))
+			.do(this.__callPlugins.bind(this, 'onKey'))
 			.subscribe();
 		
 		this.config = $.selectConfig();
@@ -72,7 +78,11 @@ class Watchdog {
 		this.minerProcess = minerProcessProvider(this.config.miner.path, this.config.miner.pingInterval);
 		this.explorerBlocksProvider = explorerBlocksProvider;
 		this.minerBlocksProvider = minerBlocksProvider;
-		
+
+	}
+	
+	__callPlugins(eventType, event){
+		this.plugins.forEach( plugin => plugin.onEvent(eventType, event) );
 	}
 	
 	async __initialize() {
@@ -123,13 +133,15 @@ class Watchdog {
 			.let(purify)
 			.do(logBlockEvent)
 			.let(isExplorerBeforeMiner)
-			.do(logBehindExplorer);
+			.do(logBehindExplorer)
+			.do(this.__callPlugins.bind(this, 'onRestart'));
 		
 		const minerConnectionError$ = minerError$
 			.let(connectionError);
 		
 		const exit$ = minerConnectionError$
 			.merge(exitRequest$, requireRestart$)
+			.do(this.__callPlugins.bind(this,'onExit'))
 			.do(this.__exit)
 			.first();
 		
