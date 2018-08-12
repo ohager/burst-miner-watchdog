@@ -1,9 +1,8 @@
 const axios = require('axios');
 const {orderBy, last} = require('lodash');
 
-
 class ExplorerAPI {
-	constructor(baseUrl){
+	constructor(baseUrl) {
 		this.baseUrl = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
 	}
 	
@@ -15,4 +14,4 @@ class ExplorerAPI {
 	}
 }
 
-module.exports =  ExplorerAPI;
+module.exports = ExplorerAPI;

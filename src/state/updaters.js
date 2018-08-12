@@ -17,11 +17,11 @@ const restartUpdater = function () {
 	);
 };
 
-const errorUpdater = function (error) {
+const errorUpdater = function (errorMessage) {
 	state.update(currentState => ({
 			error: timestamped({
 				count: ++currentState.error.count,
-				exception: error
+				exception: errorMessage
 			})
 		})
 	);

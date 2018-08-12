@@ -10,7 +10,7 @@ class MinerObservable extends Socket {
 		return this.messageEvents()
 			.map(e => JSON.parse(e.data))
 			.filter(e => !!e.block)
-			.map(e => +e.block)
+			//.map(e => +e.block)
 	}
 }
 

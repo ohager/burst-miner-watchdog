@@ -6,6 +6,7 @@ const {writeDebug} = require('@/utils');
 const INC_BLOCK = '<';
 const DEC_BLOCK = '>';
 const RESET_BLOCK = '?';
+const RAISE_EXCEPTION = 'E';
 const SHOW_HELP = 'h';
 
 const keyMap = {

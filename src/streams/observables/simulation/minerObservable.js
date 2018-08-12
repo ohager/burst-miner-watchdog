@@ -23,6 +23,7 @@ const keyMap = {
 const allowedBlockKeys = ({sequence}) => Object.keys(keyMap).indexOf(sequence) >= 0;
 
 function keyReducer(acc, {sequence}) {
+	
 	switch (sequence) {
 		case INC_BLOCK:
 			return ++acc;
