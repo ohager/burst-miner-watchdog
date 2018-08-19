@@ -46,7 +46,8 @@ class MinerSimulationObservable {
 		this.block$ = key$
 			.filter(allowedBlockKeys)
 			.scan(keyReducer, 0)
-			.do(blockHeight => writeDebug(`Miner Block: ${blockHeight}`, '[TEST]'));
+			.map(height => ({block:height}))
+			.do(b => writeDebug(`Miner Block: ${b.block}`, '[TEST]'));
 		
 		this.error$ = key$
 			.let(sequence(RAISE_ERROR))

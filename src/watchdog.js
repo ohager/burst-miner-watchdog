@@ -1,6 +1,6 @@
 const path = require('path');
 const chalk = require('chalk');
-const memoize = require('lodash/memoize');
+//const memoize = require('lodash/memoize');
 const {version, author} = require('../package.json');
 const {isDevelopmentMode} = require('./utils');
 const {selectors: $, updaters} = require('./state');
@@ -35,7 +35,6 @@ function printHeader() {
 	
 }
 
-
 const PRINT_CONFIG = 'c';
 const PRINT_HELP = 'h';
 const TOGGLE_LOGGER = 'l';
@@ -48,7 +47,7 @@ const keyMap = {
 	[TOGGLE_LOGGER]: 'Toggles through logger settings',
 	[RESTART_MINER]: 'Restarts miner manually',
 	[SHOW_STATE]: 'Shows current watchdog state',
-	'ESC, CTRL-C' : 'Exit'
+	'ESC, CTRL-C': 'Exit'
 };
 
 class Watchdog {
@@ -59,15 +58,14 @@ class Watchdog {
 		this.__handleEvents = this.__handleEvents.bind(this);
 		this.__exit = this.__exit.bind(this);
 		this.__restartMiner = this.__restartMiner.bind(this);
-		this.__getPluginCallback = memoize(this.__getPluginCallback.bind(this));
-		//this.__callPlugins = this.__callPlugins.bind(this);
+		this.__createPluginCaller = this.__createPluginCaller.bind(this);
 		
 		this.plugins = pluginLoader.load(path.join(__dirname, './plugins'));
 		
 		const {forKey} = keyOperations;
 		this.key$ = keysProvider();
 		this.key$
-			.do(this.__getPluginCallback('onKey'))
+			.do(this.__createPluginCaller('onKey'))
 			.do(forKey(PRINT_CONFIG)(keyEffects.printConfiguration))
 			.do(forKey(TOGGLE_LOGGER)(keyEffects.toggleLogger))
 			.do(forKey(SHOW_STATE)(keyEffects.printState))
@@ -82,14 +80,16 @@ class Watchdog {
 		this.minerBlocksProvider = minerBlocksProvider;
 		
 		this.restartRetrialCounter = 0;
+		
+		this.__createPluginCaller("onStart")(this.config);
 	}
 	
-	__getPluginCallback(eventName){
+	__createPluginCaller(eventName) {
 		return this.__callPlugins.bind(this, eventName);
 	}
 	
-	__callPlugins(eventType, event){
-		this.plugins.forEach( plugin => plugin.onEvent(eventType, event) );
+	__callPlugins(eventType, event) {
+		this.plugins.forEach(plugin => plugin.onEvent(eventType, event));
 	}
 	
 	async __initialize() {
@@ -99,27 +99,17 @@ class Watchdog {
 	}
 	
 	async __exit(e) {
-		this.__getPluginCallback("onExit")(e);
+		this.__createPluginCaller("onExit")(e);
 		writeInfo("Exiting Watchdog...", "[BYE]");
 		await this.minerProcess.stop({killChildProcess: $.selectIsAutoClose()});
 		process.exit(0);
-	}
-	
-	__incrementRestartAttempts() {
-		this.restartRetrialCounter++;
-		setTimeout(() => {
-			this.restartRetrialCounter = 0;
-		}, RESTART_DELAY * 2);
-		return this.restartRetrialCounter;
 	}
 	
 	async __restartMiner() {
 		
 		this.restartSubscription.unsubscribe();
 		
-		// TODO: how can I build this into RXJS?
-		this.__incrementRestartAttempts();
-		if(this.restartRetrialCounter > MAX_RESTART_ATTEMPTS){
+		if (++this.restartRetrialCounter > MAX_RESTART_ATTEMPTS) {
 			this.__exit({reason: 'Exceeded restart attempts for miner'});
 			return;
 		}
@@ -135,46 +125,54 @@ class Watchdog {
 	
 	__handleEvents() {
 		
-		const callPlugins = eventName => this.__callPlugins.bind(this, eventName);
-		
 		writeInfo("Start listening blocks");
 		
 		const {miner, explorer} = this.config;
 		
 		const {block$, error$, close$} = this.minerBlocksProvider(miner.websocketUrl);
 		const explorerBlocks = this.explorerBlocksProvider(explorer.apiUrl, explorer.pollInterval);
-		const {logError} = errorEffects;
 		
 		const {exitKey} = keyOperations;
 		const {purify, isExplorerBeforeMiner} = blockOperations;
-		const {logBlockEvent, logBehindExplorer, logCloseEvent, updateMinerBlockState, updateExplorerBlockState} = blockEffects;
+		const {updateMinerBlockState, updateExplorerBlockState} = blockEffects;
+		const {updateError} = errorEffects;
 		
 		const explorerBlockHeight$ = explorerBlocks
-			.do(this.__getPluginCallback('onExplorerBlock'))
+			.do(this.__createPluginCaller('onExplorerBlock'))
 			.pluck('height')
 			.do(updateExplorerBlockState);
+		
 		const minerBlockHeight$ = block$
-			.do(this.__getPluginCallback('onMinerBlock'))
+			.do(this.__createPluginCaller('onMinerBlock'))
+			.do(() => {
+				this.restartRetrialCounter = 0
+			})
 			.pluck('block')
-			.map( b => +b)
+			.map(b => +b)
 			.do(updateMinerBlockState);
-		const minerClose$ = close$.do(this.__getPluginCallback('onMinerClose')).do(logCloseEvent);
-		const minerError$ = error$.do(this.__getPluginCallback('onMinerError')).do(logError);
+		
+		const minerClose$ = close$
+			.do(this.__createPluginCaller('onMinerClose'));
+		
+		const minerError$ = error$
+			.do(this.__createPluginCaller('onMinerError'))
+			.do(updateError);
+		
 		const exitRequest$ = this.key$
 			.let(exitKey)
-			.do(this.__exit);
+			.do(this.__exit.bind(this, {reason: "Requested by user"}));
 		
-		const requireRestart$ = minerBlockHeight$
+		const minerStuck$ = minerBlockHeight$
 			.combineLatest(explorerBlockHeight$)
 			.let(purify)
-			.do(logBlockEvent) //< FIXME: use logger plugin
+			.do(this.__createPluginCaller('onNewBlock'))
 			.let(isExplorerBeforeMiner)
-			.do(logBehindExplorer); //< FIXME: use logger plugin
+			.do(this.__createPluginCaller('onMinerStuck'));
 		
 		this.restartSubscription = minerClose$
-			.merge(minerError$, requireRestart$)
+			.merge(minerError$, minerStuck$)
 			.takeUntil(exitRequest$)
-			.do(this.__getPluginCallback('onRestart'))
+			.do(this.__createPluginCaller('onRestart'))
 			.subscribe(this.__restartMiner);
 	}
 	
