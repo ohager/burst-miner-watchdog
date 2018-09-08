@@ -6,7 +6,7 @@
   "license": "MIT",
   "name": "burst-miner-watchdog",
   "version": "0.0.1",
-  "description": "A watchdog for BURST coin miner (creepMiner)",
+  "description": "A watchdog for BURST coin miner",
   "keywords": [
     "burst",
     "burstcoin",

@@ -1,10 +1,10 @@
 const path = require('path');
 const chalk = require('chalk');
-//const memoize = require('lodash/memoize');
 const {version, author} = require('../package.json');
 const {isDevelopmentMode} = require('./utils');
 const {selectors: $, updaters} = require('./state');
-const pluginLoader = require('@/pluginLoader');
+
+const KeyObservable = require('@streams/observables/keyObservable');
 const keyEffects = require('@streams/effects/keys');
 const blockEffects = require('@streams/effects/blocks');
 const errorEffects = require('@streams/effects/errors');
@@ -52,7 +52,7 @@ const keyMap = {
 
 class Watchdog {
 	
-	constructor({keysProvider, minerBlocksProvider, explorerBlocksProvider, minerProcessProvider}) {
+	constructor({explorerProvider, minerObservableProvider, minerProcessProvider, handler}) {
 		
 		this.__initialize = this.__initialize.bind(this);
 		this.__handleEvents = this.__handleEvents.bind(this);
@@ -60,10 +60,15 @@ class Watchdog {
 		this.__restartMiner = this.__restartMiner.bind(this);
 		this.__createPluginCaller = this.__createPluginCaller.bind(this);
 		
-		this.plugins = pluginLoader.load(path.join(__dirname, './plugins'));
+		this.config = $.selectConfig();
+
+		this.minerProcess = minerProcessProvider.provide(); //minerProcessProvider(this.config.miner.path, this.config.miner.pingInterval);
+		this.explorerBlocksProvider = explorerProvider;
+		this.minerBlocksProvider = minerObservableProvider;
+		this.handlerPlugins = handler;
 		
 		const {forKey} = keyOperations;
-		this.key$ = keysProvider();
+		this.key$ = new KeyObservable().get();
 		this.key$
 			.do(this.__createPluginCaller('onKey'))
 			.do(forKey(PRINT_CONFIG)(keyEffects.printConfiguration))
@@ -72,12 +77,6 @@ class Watchdog {
 			.do(forKey(PRINT_HELP)(() => keyEffects.printHelp(keyMap)))
 			.do(forKey(RESTART_MINER)(this.__restartMiner, this))
 			.subscribe();
-		
-		this.config = $.selectConfig();
-		
-		this.minerProcess = minerProcessProvider(this.config.miner.path, this.config.miner.pingInterval);
-		this.explorerBlocksProvider = explorerBlocksProvider;
-		this.minerBlocksProvider = minerBlocksProvider;
 		
 		this.restartRetrialCounter = 0;
 		
@@ -89,7 +88,7 @@ class Watchdog {
 	}
 	
 	__callPlugins(eventType, event) {
-		this.plugins.forEach(plugin => plugin.onEvent(eventType, event));
+		this.handlerPlugins.forEach(plugin => plugin.onEvent(eventType, event));
 	}
 	
 	async __initialize() {
@@ -127,17 +126,17 @@ class Watchdog {
 		
 		writeInfo("Start listening blocks");
 		
-		const {miner, explorer} = this.config;
+		//const {miner, explorer} = this.config;
 		
-		const {block$, error$, close$} = this.minerBlocksProvider(miner.websocketUrl);
-		const explorerBlocks = this.explorerBlocksProvider(explorer.apiUrl, explorer.pollInterval);
+		const {blockEvents : block$, errorEvents : error$, closeEvents : close$} = this.minerBlocksProvider.provide();
+		const explorerBlock$ = this.explorerBlocksProvider.provide();
 		
 		const {exitKey} = keyOperations;
 		const {purify, isExplorerBeforeMiner} = blockOperations;
 		const {updateMinerBlockState, updateExplorerBlockState} = blockEffects;
 		const {updateError} = errorEffects;
 		
-		const explorerBlockHeight$ = explorerBlocks
+		const explorerBlockHeight$ = explorerBlock$
 			.do(this.__createPluginCaller('onExplorerBlock'))
 			.pluck('height')
 			.do(updateExplorerBlockState);
@@ -174,6 +173,7 @@ class Watchdog {
 			.takeUntil(exitRequest$)
 			.do(this.__createPluginCaller('onRestart'))
 			.subscribe(this.__restartMiner);
+		
 	}
 	
 	async run() {

@@ -3,7 +3,7 @@ const readline = require('readline');
 const process = require('process');
 
 readline.emitKeypressEvents(process.stdin);
-process.stdin.setRawMode(true);
+//process.stdin.setRawMode(true);
 
 class KeyObservable {
 	

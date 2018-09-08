@@ -1,0 +1,6 @@
+{
+  "path": "C:\\Program Files\\creepMiner 1.8.0\\creepMiner.exe",
+  "websocketUrl": "ws://localhost:8124/",
+  "pingInterval": 300,
+  "autoClose": true
+}

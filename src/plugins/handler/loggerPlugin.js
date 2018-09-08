@@ -1,13 +1,12 @@
-const Plugin = require('@/plugin');
-const {writeWarning, writeSuccess, writeError} = require('@/utils');
+const HandlerPlugin = require('../handlerPlugin');
+const {writeWarning, writeSuccess, writeError, writeInfo} = require('@/utils');
 
 const blockString = e => `Blocks - Miner: ${e.miner}, Explorer: ${e.explorer}`;
 const logBlockEvent = e => writeSuccess(`${blockString(e)}`, '[✓]');
 const logBehindExplorer = e => writeWarning(`Miner Block is less than Explorer:\n${blockString(e)}`);
 const logCloseEvent = () => writeWarning(`miner has closed connection...`);
 
-
-class LoggerPlugin extends Plugin{
+class LoggerPlugin extends HandlerPlugin{
 	constructor(){
 		super("Logger")
 	}
@@ -40,19 +39,19 @@ class LoggerPlugin extends Plugin{
 		writeSuccess(`${blockString(e)}`, '[✓]')
 	}
 	
-	onRestart(){
+	onRestart(e){
 	
 	}
 
-	onStart(){
+	onStart(e){
+		writeInfo("Starting...", e)
+	}
+
+	onExit(e){
 	
 	}
 
-	onExit(){
-	
-	}
-
-	onKey(){
+	onKey(e){
 	
 	}
 

@@ -1,9 +1,12 @@
+const ProviderPlugin = require('@/plugins/providerPlugin');
 const {writeDebug, writeWarning, writeSuccess} = require('@/utils');
+const config = require("./config.json");
 
-class MinerProcessMock {
+class Process extends ProviderPlugin {
 	
-	constructor(_, pingInterval) {
-		this.pingInterval = pingInterval * 1000;
+	constructor() {
+		super('Mockminer Process');
+		this.pingInterval = config.pingInterval * 1000;
 		this.pingIntervalHandler = null;
 	}
 	
@@ -36,6 +39,14 @@ class MinerProcessMock {
 		return Promise.resolve();
 	}
 	
+	provide(){
+		return {
+			isRunning : this.isRunning.bind(this),
+			start: this.start.bind(this),
+			stop: this.stop.bind(this),
+		}
+	}
+	
 }
 
-module.exports = MinerProcessMock;
+module.exports = Process;

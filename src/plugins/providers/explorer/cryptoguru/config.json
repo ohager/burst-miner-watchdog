@@ -1,0 +1,4 @@
+{
+  "baseUrl" : "https://explore.burst.cryptoguru.org/api/v1/",
+  "pollInterval": 10
+}

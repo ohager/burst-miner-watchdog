@@ -1,3 +1,4 @@
+const MinerObservablePlugin = require('@/plugins/minerObservablePlugin');
 const keysProvider = require('@/providers/keysProvider');
 const {sequence} = require('@streams/operations/keys');
 const {printHelp} = require('@streams/effects/keys');
@@ -38,9 +39,10 @@ function keyReducer(acc, {sequence}) {
 	}
 }
 
-class MinerSimulationObservable {
+class Observable extends MinerObservablePlugin {
 	
 	constructor() {
+		super("Mockminer Observable");
 		const key$ = keysProvider();
 		
 		this.block$ = key$
@@ -67,6 +69,7 @@ class MinerSimulationObservable {
 	closeEvents() {
 		return this.close$;
 	}
+	
 }
 
-module.exports = MinerSimulationObservable;
+module.exports = Observable;

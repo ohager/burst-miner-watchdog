@@ -2,47 +2,34 @@ const fs = require('fs');
 const Ajv = require('ajv');
 const chalk = require('chalk');
 const {highlight} = require('cli-highlight');
-const {updaters} = require('@/state');
 
-function printError(brief, detail){
+function printError(brief, detail) {
 	const red = chalk.bold.redBright;
 	const yellow = chalk.bold.yellowBright;
 	const white = chalk.bold.whiteBright;
 	
 	console.error(red("[ERROR]"));
-	console.error(yellow(brief),'\n');
+	console.error(yellow(brief), '\n');
 	console.error(white(detail), '\n\n');
 	
 	process.exit(-1);
 }
 
 
-/**
- *   "miner": {
-    "path": "C:\\Program Files\\creepMiner 1.8.0\\creepMiner.exe",
-    "websocketUrl": "ws://localhost:8124/",
-    "pingInterval": 300,
-    "autoClose" : true
-  },
- 
- * @type {ajv | ajv.Ajv}
- */
-
 const ajv = new Ajv({allErrors: true, jsonPointers: true});
 require('ajv-errors')(ajv);
 
-
 const configSchema = {
-	required: ['logger','miner','failuresUntilGiveup'],
+	required: ['logger', 'providers', 'failuresUntilGiveup'],
 	properties: {
-		failuresUntilGiveup : {
+		failuresUntilGiveup: {
 			type: 'number',
 			minimum: 3,
 			maximum: 50
 		},
 		logger: {
 			type: 'object',
-			required: ['enabled','level'],
+			required: ['enabled', 'level'],
 			properties: {
 				enabled: {
 					type: 'boolean'
@@ -52,64 +39,20 @@ const configSchema = {
 				}
 			}
 		},
-		miner: {
+		plugins : {
 			type: 'object',
-			required: ['path','websocketUrl', 'pingInterval', 'autoClose'],
-			properties: {
-				path: {
-					type: 'string'
-				},
-				websocketUrl: {
-					type: 'string',
-					format: 'uri',
-					pattern: "^wss?:\/\/.+",
-					errorMessage: 'Should be a valid websocket URL'
-				},
-				pingInterval: {
-					type: 'number',
-					minimum: 1,
-					maximum: 15 * 60
-				},
-				autoClose :{
-					type : 'boolean'
-				}
-			}
+			required: ['explorer', 'minerProcess', 'minerObservable'],
+			
 		},
-		explorer: {
-			type: 'object',
-			required: ['pollInterval','apiUrl'],
-			properties: {
-				pollInterval: {
-					type: 'number',
-					minimum: 1,
-					maximum: 2 * 60,
-					errorMessage: 'The poll interval is measured in seconds'
-				},
-				apiUrl: {
-					format: 'url',
-					errorMessage: 'The root URL for the block explorer, i.e. the official PoCC API'
-				}
-			}
-		},
-		
 	}
 };
 
 const validate = ajv.compile(configSchema);
 
-function validateConfigJson(json){
-	
+function validateConfigJson(json) {
 	const isValid = validate(json);
 	if (!isValid) {
 		printError('Validation for configuration failed!', highlight(JSON.stringify(validate.errors, null, 4)));
-	}
-	
-}
-
-function validateConfigPaths(json){
-	if(!fs.existsSync(json.miner.path)){
-		printError('Invalid Path', `Could not find miner: ${json.miner.path}`);
-		process.exit(-1);
 	}
 }
 
@@ -125,9 +68,9 @@ function load(configFileName) {
 	}
 	
 	validateConfigJson(configObj);
-	validateConfigPaths(configObj);
 	
-	updaters.configUpdater(configObj);
+	return configObj;
+	//updaters.configUpdater(configObj);
 	
 }
 

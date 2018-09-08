@@ -1,9 +1,10 @@
-const process = require('process');
 const path = require('path');
 const {spawn} = require('child_process');
+const ProviderPlugin = require('@/plugins/providerPlugin');
 const listProcesses = require('ps-list');
-
 const {writeInfo, writeWarning, writeSuccess} = require('@/utils');
+const config = require('./config.json');
+
 
 function windowsify(path) {
 	if (process.platform !== 'win32') return path;
@@ -19,11 +20,12 @@ function windowsify(path) {
 	return windowsPath;
 }
 
-class MinerProcess {
+class Process extends ProviderPlugin {
 	
-	constructor(execPath, pingInterval) {
-		this.execPath = execPath;
-		this.pingInterval = pingInterval * 1000;
+	constructor() {
+		super("CreepMiner Process");
+		this.execPath = config.path;
+		this.pingInterval = config.pingInterval * 1000;
 		
 		this.pingIntervalHandler = null;
 	}
@@ -95,6 +97,14 @@ class MinerProcess {
 		});
 	}
 	
+	provide(){
+		return {
+			isRunning : this.isRunning,
+			start: this.start,
+			stop: this.stop,
+		}
+	}
+	
 }
 
-module.exports = MinerProcess;
+module.exports = Process;
