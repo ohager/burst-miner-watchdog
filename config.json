@@ -1,6 +1,6 @@
 {
   "providers": {
-    "explorer" : "cryptoguru",
+    "explorer" : "mockexplorer",
     "minerProcess" : "mockminer",
     "minerObservable" : "mockminer"
   },

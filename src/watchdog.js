@@ -100,7 +100,8 @@ class Watchdog {
 	async __exit(e) {
 		this.__createPluginCaller("onExit")(e);
 		writeInfo("Exiting Watchdog...", "[BYE]");
-		await this.minerProcess.stop({killChildProcess: $.selectIsAutoClose()});
+		//await this.minerProcess.stop({killChildProcess: $.selectIsAutoClose()});
+		await this.minerProcess.stop({killChildProcess: true});
 		process.exit(0);
 	}
 	
