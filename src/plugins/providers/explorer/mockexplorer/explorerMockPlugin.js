@@ -1,4 +1,4 @@
-const keysProvider = require('@/providers/keysProvider');
+const keyObservable = require('@/streams/observables/keyObservable');
 const {printHelp} = require('@streams/effects/keys');
 const {forKey} = require('@streams/operations/keys');
 const {writeDebug} = require('@/utils');
@@ -36,7 +36,7 @@ class ExplorerMock extends ProviderPlugin {
 	
 	constructor() {
 		super('Mocked Explorer');
-		const key$ = keysProvider();
+		const key$ = keyObservable.get();
 		
 		this.lastBlock$ = key$
 			.filter(allowedBlockKeys)

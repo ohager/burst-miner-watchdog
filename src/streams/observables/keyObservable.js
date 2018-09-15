@@ -4,9 +4,12 @@ const process = require('process');
 
 class KeyObservable {
 	
-	get() {
+	constructor(){
 		readline.emitKeypressEvents(process.stdin);
 		process.stdin.setRawMode(true);
+	}
+	
+	get() {
 		return Rx.Observable.fromEventPattern(
 			(handler) => {
 				process.stdin.on('keypress', handler)
@@ -22,4 +25,4 @@ class KeyObservable {
 	
 }
 
-module.exports = KeyObservable;
+module.exports = new KeyObservable();

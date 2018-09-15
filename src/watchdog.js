@@ -4,7 +4,7 @@ const {version, author} = require('../package.json');
 const {isDevelopmentMode} = require('./utils');
 const {selectors: $, updaters} = require('./state');
 
-const KeyObservable = require('@streams/observables/keyObservable');
+const keyObservable = require('@streams/observables/keyObservable');
 const keyEffects = require('@streams/effects/keys');
 const blockEffects = require('@streams/effects/blocks');
 const errorEffects = require('@streams/effects/errors');
@@ -68,7 +68,7 @@ class Watchdog {
 		this.handlerPlugins = handler;
 		
 		const {forKey} = keyOperations;
-		this.key$ = new KeyObservable().get();
+		this.key$ = keyObservable.get();
 		this.key$
 			.do(this.__createPluginCaller('onKey'))
 			.do(forKey(PRINT_CONFIG)(keyEffects.printConfiguration))

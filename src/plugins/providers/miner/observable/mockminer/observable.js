@@ -1,5 +1,5 @@
 const MinerObservablePlugin = require('@/plugins/minerObservablePlugin');
-const keysProvider = require('@/providers/keysProvider');
+const keyObservable = require('@/streams/observables/keyObservable');
 const {sequence} = require('@streams/operations/keys');
 const {printHelp} = require('@streams/effects/keys');
 const {writeDebug} = require('@/utils');
@@ -43,7 +43,7 @@ class Observable extends MinerObservablePlugin {
 	
 	constructor() {
 		super("Mockminer Observable");
-		const key$ = keysProvider();
+		const key$ = keyObservable.get();
 		
 		this.block$ = key$
 			.filter(allowedBlockKeys)
