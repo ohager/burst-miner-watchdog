@@ -1,7 +1,7 @@
 @IF EXIST "%~dp0\node.exe" (
-  "%~dp0\node.exe"  "%~dp0\node_modules\burst-miner-watchdog\bin\index.js" %*
+  "%~dp0\node.exe"  "%~dp0\node_modules\burst-miner-watchdog\bin\watchdog.js" %*
 ) ELSE (
   @SETLOCAL
   @SET PATHEXT=%PATHEXT:;.JS;=;%
-  node  "%~dp0\node_modules\burst-miner-watchdog\bin\index.js" %*
+  node  "%~dp0\node_modules\burst-miner-watchdog\bin\watchdog.js" %*
 )
