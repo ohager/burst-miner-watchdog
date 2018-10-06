@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 require('module-alias/register');
 const args = require('args');
-
-function pluginCommandCaller(name, sub, options){
-	const command = require(`@/commands/plugin/${name}`);
-	command.exec(sub, options)
-}
+const isEmpty = require('lodash/isEmpty');
 
 function validateType(v){
+	
+	if(isEmpty(v)){
+		console.error("type is required");
+		process.exit(-1)
+	}
+	
 	if(["handler", "explorer", "miner-process", "miner-observable"].indexOf(v) === -1){
 		console.error(`Unknown plugin type [${v}]`);
 		process.exit(-1);
@@ -16,7 +18,8 @@ function validateType(v){
 
 args.option("type", "The plugin type", "handler", validateType)
 	.option("name", "The name of the plugin")
-	.command("add", "Adds plugin to watchdog", pluginCommandCaller)
-	.command("remove", "Adds plugin to watchdog", pluginCommandCaller);
+	.option("dir", "The name of the folder where the plugins sources are", "./");
 
-args.parse(process.argv, {version: false});
+const options = args.parse(process.argv, {version: false});
+
+console.log("plugin-add", options);

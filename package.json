@@ -57,19 +57,21 @@
     "ws": "^5.2.0"
   },
   "bin": {
-    "watchdog": "./bin/watchdog.js",
-    "watchdog-plugin": "./bin/watchdog-plugin.js"
+    "watchdog": "./dist/bin/watchdog.js",
+    "watchdog-plugin": "./dist/bin/watchdog-plugin.js",
+    "watchdog-plugin-add": "./dist/bin/watchdog-plugin-add.js",
+    "watchdog-plugin-remove": "./dist/bin/watchdog-plugin-remove.js"
   },
   "engines": {
     "node": ">=8.9.0"
   },
   "preferGlobal": true,
   "scripts": {
-    "build": "babel src --out-dir bin --copy-files",
+    "build": "babel src --out-dir dist --copy-files",
     "test:dev": "cross-env NODE_ENV=test jest",
     "test": "cross-env NODE_ENV=test jest --coverage && codecov",
-    "start:dev": "cross-env NODE_ENV=development node ./src/watchdog.js",
-    "start:qa": "cross-env NODE_ENV=qa node ./src/watchdog.js",
+    "start:dev": "cross-env NODE_ENV=development node ./src/bin/watchdog.js",
+    "start:qa": "cross-env NODE_ENV=qa node ./src/bin/watchdog.js",
     "release": "npm run test:dev && npm run build && node ./tools/tag.js"
   }
 }
