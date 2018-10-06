@@ -7,4 +7,13 @@ args.command("add", "Adds plugin to watchdog")
 
 const options = args.parse(process.argv, {version: false});
 
-console.log("watchdog-plugin", options);
+if(!args.sub.length){
+	args.showHelp();
+	process.exit(-1);
+}
+
+if(["add", "remove"].indexOf(args.sub[0]) === -1) {
+	console.error("Unknown command: ", args.sub[0]);
+	args.showHelp();
+	process.exit(-1);
+}

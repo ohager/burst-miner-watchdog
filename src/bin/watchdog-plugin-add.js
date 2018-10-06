@@ -5,21 +5,30 @@ const isEmpty = require('lodash/isEmpty');
 
 function validateType(v){
 	
-	if(isEmpty(v)){
-		console.error("type is required");
-		process.exit(-1)
-	}
-	
 	if(["handler", "explorer", "miner-process", "miner-observable"].indexOf(v) === -1){
 		console.error(`Unknown plugin type [${v}]`);
 		process.exit(-1);
 	}
+	
+	return v;
 }
 
-args.option("type", "The plugin type", "handler", validateType)
-	.option("name", "The name of the plugin")
-	.option("dir", "The name of the folder where the plugins sources are", "./");
+const required = (option) => (initFb) => (v) => {
+	if(isEmpty(v)){
+		console.error(`[${option}] is mandatory`);
+		process.exit(-1);
+		return;
+	}
+	
+	return initFb ? initFb(v) : v;
+};
+
+args.option("type", "The plugin type", "handler", required("type")(validateType))
+	.option("name", "The name of the plugin", "", required("name")())
+	.option("src", "The name of the folder where your plugin sources are located", "./", required("src")());
 
 const options = args.parse(process.argv, {version: false});
 
 console.log("plugin-add", options);
+
+
