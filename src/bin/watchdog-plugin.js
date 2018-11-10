@@ -2,8 +2,9 @@
 require('module-alias/register');
 const args = require('args');
 
-args.command("add", "Adds plugin to watchdog")
-	.command("remove", "Adds plugin to watchdog");
+args.command("add", "Adds plugin to watchdog (call watchdog-plugin-add --help if needed)")
+	.command("list", "Adds plugin to watchdog (call watchdog-plugin-list --help if needed)")
+	.command("remove", "Adds plugin to watchdog (call watchdog-plugin-remove --help if needed)");
 
 const options = args.parse(process.argv, {version: false});
 
@@ -12,7 +13,7 @@ if(!args.sub.length){
 	process.exit(-1);
 }
 
-if(["add", "remove"].indexOf(args.sub[0]) === -1) {
+if(["add", "remove", "list"].indexOf(args.sub[0]) === -1) {
 	console.error("Unknown command: ", args.sub[0]);
 	args.showHelp();
 	process.exit(-1);
