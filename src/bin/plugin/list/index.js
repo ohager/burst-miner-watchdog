@@ -2,15 +2,23 @@ const {readdirSync} = require("fs");
 const {join} = require("path");
 const {PathAlias} = require("../../lib/constants");
 
+const prettifyFilename =  name => name.replace(".js", "");
 
-function listHandlerPlugins(){
-	const handlerDir = join(PathAlias.Plugins, "handler");
+function listPlugins(type){
+	const handlerDir = join(PathAlias.Plugins, type);
 	const fileNames = readdirSync(handlerDir);
-	console.log(fileNames.map(name => name.replace(".js", "")));
+	console.log(fileNames.map(prettifyFilename));
 }
 
 function listPlugin(){
-	listHandlerPlugins()
+	console.info("Handler Plugins:");
+	listPlugins("handler");
+	
+	console.info("\nExplorer Plugins:");
+	listPlugins("providers/explorer");
+	
+	console.info("\nMiner Plugins:");
+	listPlugins("providers/miner");
 }
 
 module.exports = listPlugin;
