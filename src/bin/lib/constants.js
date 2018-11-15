@@ -1,7 +1,7 @@
 const path = require("path");
 
 const PluginTypes = {
-	HANDLER : 'handler',
+	HANDLER : "handler",
 	EXPLORER: "explorer",
 	MINER_PROCESS: "miner-process",
 	MINER_OBSERVABLE: "miner-observable",

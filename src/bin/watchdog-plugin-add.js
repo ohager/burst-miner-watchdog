@@ -2,16 +2,17 @@
 require('module-alias/register');
 const args = require('args');
 const {required} = require('./lib/argutils');
+const {PluginTypes} = require('./lib/constants');
 const addCommand = require('./plugin/add');
 
-function validateType(v){
-	const allowedTypes = ["handler", "explorer", "miner-process", "miner-observable"];
-	if(allowedTypes.indexOf(v) === -1){
+const AllowedTypes = Object.keys(PluginTypes).map(key => PluginTypes[key])
+
+function validateType(v) {
+	if (AllowedTypes.indexOf(v) === -1) {
 		console.error(`Unknown plugin type [${v}], allowed are:\n`);
-		allowedTypes.forEach( t => console.error(`\t- ${t}`));
+		AllowedTypes.forEach(t => console.error(`\t- ${t}`));
 		process.exit(-1);
 	}
-	
 	return v;
 }
 
@@ -21,7 +22,16 @@ args.option("type", "The plugin type", "handler", validateType)
 
 const options = args.parse(process.argv, {version: false});
 
-required(options, ["name", "src", "type"], () => {args.showHelp()});
+required(options, ["name", "src", "type"], () => {
+	args.showHelp()
+});
 
-addCommand(options);
+try {
+	addCommand(options);
+}
+catch (e) {
+	console.error(e);
+	process.exit(-1);
+}
+
 
