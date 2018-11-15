@@ -63,3 +63,5 @@ typings/
 .idea
 /bin
 /dist
+/src/bin/testplugins
+

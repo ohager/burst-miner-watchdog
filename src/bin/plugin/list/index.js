@@ -17,8 +17,11 @@ function listPlugin(){
 	console.info("\nExplorer Plugins:");
 	listPlugins("providers/explorer");
 	
-	console.info("\nMiner Plugins:");
-	listPlugins("providers/miner");
+	console.info("\nMiner Observable Plugins:");
+	listPlugins("providers/miner/observable");
+
+	console.info("\nMiner Process Plugins:");
+	listPlugins("providers/miner/process");
 }
 
 module.exports = listPlugin;

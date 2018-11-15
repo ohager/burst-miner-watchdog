@@ -11,7 +11,16 @@ const PathAlias = {
 	Plugins : path.join(__dirname, "../../plugins"),
 };
 
+const PluginTypeDirs = {
+	[PluginTypes.HANDLER]: path.join(PathAlias.Plugins, '/handler'),
+	[PluginTypes.EXPLORER]: path.join(PathAlias.Plugins, '/providers/explorer'),
+	[PluginTypes.MINER_OBSERVABLE]: path.join(PathAlias.Plugins, '/providers/miner/observable'),
+	[PluginTypes.MINER_PROCESS]: path.join(PathAlias.Plugins, '/providers/miner/process'),
+};
+
+
 module.exports = {
 	PluginTypes,
-	PathAlias
+	PathAlias,
+	PluginTypeDirs,
 };
