@@ -4,7 +4,8 @@ const args = require('args');
 
 args.command("add", "Adds plugin to watchdog (call watchdog-plugin-add --help if needed)")
 	.command("list", "Adds plugin to watchdog (call watchdog-plugin-list --help if needed)")
-	.command("remove", "Adds plugin to watchdog (call watchdog-plugin-remove --help if needed)");
+	.command("remove", "Adds plugin to watchdog (call watchdog-plugin-remove --help if needed)")
+	.command("create", "Creates a plugin stub for plugin development (call watchdog-plugin-create --help if needed)");
 
 const options = args.parse(process.argv, {version: false});
 
@@ -13,7 +14,7 @@ if(!args.sub.length){
 	process.exit(-1);
 }
 
-if(["add", "remove", "list"].indexOf(args.sub[0]) === -1) {
+if(["add", "remove", "list", "create"].indexOf(args.sub[0]) === -1) {
 	console.error("Unknown command: ", args.sub[0]);
 	args.showHelp();
 	process.exit(-1);

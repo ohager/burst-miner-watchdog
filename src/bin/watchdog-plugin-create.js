@@ -2,20 +2,19 @@
 require('module-alias/register');
 const args = require('args');
 const {required, validateType} = require('./lib/argutils');
-const addCommand = require('./plugin/add');
+const createCommand = require('./plugin/create/create');
 
 args.option("type", "The plugin type", "handler", validateType)
-	.option("name", "The identifier/name of the plugin", "myPlugin")
-	.option("src", "The name of the folder where your plugin sources are located", "./");
+	.option("name", "The identifier/name of the plugin");
 
 const options = args.parse(process.argv, {version: false});
 
-required(options, ["name", "src", "type"], () => {
+required(options, ["name", "type"], () => {
 	args.showHelp()
 });
 
 try {
-	addCommand(options);
+	createCommand(options);
 }
 catch (e) {
 	console.error(e);

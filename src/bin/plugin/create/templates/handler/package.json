@@ -1,0 +1,33 @@
+{
+  "author": {
+    "name": "",
+    "email": ""
+  },
+  "license": "MIT",
+  "name": "watchdog-plugin",
+  "version": "0.0.1",
+  "description": "Best plugin ever",
+  "keywords": [
+    "burst",
+    "burstcoin",
+    "miner",
+    "mining",
+    "resilience",
+    "automation",
+    "watchdog",
+    "plugin"
+  ],
+  "private": false,
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-preset-stage-2": "^6.24.1"
+  },
+  "dependencies": {
+  },
+  "engines": {
+    "node": ">=8.9.0"
+  },
+  "scripts": {
+    "build": "babel src --out-dir dist --copy-files"
+  }
+}

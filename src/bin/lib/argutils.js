@@ -1,4 +1,16 @@
 const isEmpty = require('lodash/isEmpty');
+const {PluginTypes} = require('./constants');
+
+const AllowedTypes = Object.keys(PluginTypes).map(key => PluginTypes[key]);
+
+function validateType(v) {
+	if (AllowedTypes.indexOf(v) === -1) {
+		console.error(`Unknown plugin type [${v}], allowed are:\n`);
+		AllowedTypes.forEach(t => console.error(`\t- ${t}`));
+		process.exit(-1);
+	}
+	return v;
+}
 
 const required = (options, requiredArgs, invalidCallback = () => {}) => {
 	let isValid = true;
@@ -15,5 +27,6 @@ const required = (options, requiredArgs, invalidCallback = () => {}) => {
 };
 
 module.exports = {
-	required
+	required,
+	validateType
 };

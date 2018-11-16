@@ -1,6 +1,5 @@
 const {PluginTypes} = require('../../lib/constants');
 
-
 const propertyExists = (obj, propertyName) => {
 	const isValid = obj[propertyName] !== undefined;
 	console.info(isValid ?
