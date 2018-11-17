@@ -7,15 +7,14 @@ const {PluginTypes} = require('../../lib/constants');
 
 const TemplateRootDir = path.join(__dirname, 'templates');
 
-
-function compileFile(type, srcFilePath, data, targetDir, targetFileName) {
+function generateFileFromTemplate(type, templateFileName, data, targetDir, targetFileName) {
 	const srcDir = path.join(TemplateRootDir, type);
-	const templateFilePath = path.join(srcDir, srcFilePath);
+	const templateFilePath = path.join(srcDir, templateFileName);
 	const templateCode = readFileSync(templateFilePath);
 	const compile = template(templateCode);
 	const code = compile(data);
-	fs.remove(path.join(targetDir, srcFilePath));
-	const outputFilePath = path.join(targetDir, 'src', targetFileName);
+	fs.remove(path.join(targetDir, templateFileName));
+	const outputFilePath = path.join(targetDir, targetFileName);
 	writeFileSync(outputFilePath, code);
 	
 }
@@ -23,20 +22,33 @@ function compileFile(type, srcFilePath, data, targetDir, targetFileName) {
 function createHandler(targetDir, name) {
 	
 	const pluginName = camelCase(name) + 'Plugin';
-	compileFile(
+	const srcDir = path.join(TemplateRootDir, 'handler');
+	fs.copySync(srcDir, targetDir);
+	
+	generateFileFromTemplate(
 		'handler',
 		'src/handler.template.js', {
 			pluginName,
 			name,
-		}, targetDir,
-		pluginName + '.js');
+		},
+		targetDir,
+		`./src/${pluginName}.js`);
 	
-	compileFile(
+	generateFileFromTemplate(
 		'handler',
-		'src/index.template.js', {
-			plugin : pluginName + '.js',
-		}, targetDir,
+		'./index.template.js', {
+			plugin: pluginName + '.js',
+		},
+		targetDir,
 		'index.js');
+	
+	generateFileFromTemplate(
+		'handler',
+		'package.template.json', {
+			name,
+		},
+		targetDir,
+		'package.json');
 	
 }
 

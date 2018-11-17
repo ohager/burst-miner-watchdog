@@ -1,3 +1,4 @@
+const fs = require('fs-extra');
 const {PluginTypes} = require('../../lib/constants');
 
 const propertyExists = (obj, propertyName) => {
@@ -66,12 +67,17 @@ const TypeValidators = {
 	[PluginTypes.MINER_PROCESS]: validateMinerProcess,
 };
 
-function validate(srcDir, type) {
+function validate(src, type) {
+	
 	console.info("Validating plugin");
 	console.info("type:", type);
-	console.info("path:", srcDir);
+	console.info("path:", src);
 	
-	const pluginClass = require(srcDir);
+	if (!fs.pathExistsSync(src)) {
+		throw `Source Path could not be found:\n${src}`;
+	}
+	
+	const pluginClass = require(src);
 	TypeValidators[type](new pluginClass());
 }
 

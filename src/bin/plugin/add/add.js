@@ -12,7 +12,13 @@ const getTypeDir = (type) => {
 	return dir;
 };
 
-function overwriteExistingPlugin(srcDir, targetDir) {
+function copyPlugin(srcPath, targetDir, opts){
+	const srcStats = statSync(srcPath);
+	const srcDir = srcStats.isDirectory() ? srcPath : path.dirname(srcPath);
+	fs.copySync(srcDir, targetDir, opts);
+}
+
+function overwriteExistingPlugin(srcPath, targetDir) {
 	inquirer.prompt([
 		{
 			type: 'confirm',
@@ -23,36 +29,21 @@ function overwriteExistingPlugin(srcDir, targetDir) {
 	]).then(({overwrite}) => {
 		if (!overwrite) return;
 		console.log('Overwriting...');
-		fs.copySync(srcDir, targetDir, {overwrite: true});
+		copyPlugin(srcPath, targetDir, {overwrite:true});
 	})
-}
-
-function validateSourceDir(src) {
-	
-	if (!fs.pathExistsSync(src)) {
-		throw `Source Directory could not be found: ${src}`;
-	}
-	
-	const stats = statSync(src);
-	if (!stats.isDirectory()) {
-		throw `${src} is not a directory`;
-	}
-	
 }
 
 function add({type, name, src}) {
 	
 	const targetDir = path.join(getTypeDir(type), name);
 	
-	validateSourceDir(src);
 	validatePlugin(path.join(process.cwd(), src), type);
 	
 	if (fs.pathExistsSync(targetDir)) {
 		overwriteExistingPlugin(src, targetDir);
 	}
 	else {
-		fs.ensureDirSync(targetDir);
-		fs.copySync(src, targetDir);
+		copyPlugin(src, targetDir);
 	}
 }
 
