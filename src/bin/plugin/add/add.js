@@ -1,8 +1,9 @@
 const fs = require('fs-extra');
+const isEmpty = require("lodash/isEmpty");
 const {statSync} = require('fs');
 const inquirer = require('inquirer');
 const path = require('path');
-const {PluginTypeDirs} = require('../../lib/constants');
+const {PluginTypeDirs, PluginTypes} = require('../../lib/constants');
 const validatePlugin = require('./validate');
 
 const getTypeDir = (type) => {
@@ -12,7 +13,9 @@ const getTypeDir = (type) => {
 	return dir;
 };
 
-function copyPlugin(srcPath, targetDir, opts){
+const getTypeNames = () => Object.keys(PluginTypes).map(k => PluginTypes[k]);
+
+function copyPlugin(srcPath, targetDir, opts) {
 	const srcStats = statSync(srcPath);
 	const srcDir = srcStats.isDirectory() ? srcPath : path.dirname(srcPath);
 	fs.copySync(srcDir, targetDir, opts);
@@ -29,11 +32,12 @@ function overwriteExistingPlugin(srcPath, targetDir) {
 	]).then(({overwrite}) => {
 		if (!overwrite) return;
 		console.log('Overwriting...');
-		copyPlugin(srcPath, targetDir, {overwrite:true});
+		copyPlugin(srcPath, targetDir, {overwrite: true});
 	})
 }
 
-function add({type, name, src}) {
+
+function addPlugin({type, name, src}) {
 	
 	const targetDir = path.join(getTypeDir(type), name);
 	
@@ -47,5 +51,38 @@ function add({type, name, src}) {
 	}
 }
 
+async function add(opts) {
+	
+	inquirer.prompt([
+		{
+			type: 'list',
+			name: 'type',
+			message: 'What type of plugin do you want to add?',
+			choices: getTypeNames(),
+			default: PluginTypes.HANDLER,
+			when: () => isEmpty(opts.type),
+		},
+		{
+			type: 'input',
+			name: 'name',
+			message: 'What will be the name of your plugin?',
+			default: 'myAwesome',
+			when: () => isEmpty(opts.name),
+		},
+		{
+			type: 'input',
+			name: 'src',
+			message: 'Where are your sources located?',
+			default: './',
+			when: () => isEmpty(opts.src),
+		},
+	]).then((answers) => {
+		addPlugin({
+			...opts,
+			...answers
+		})
+	});
+	
+}
 
 module.exports = add;

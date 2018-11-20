@@ -4,6 +4,9 @@ const {PluginTypes} = require('./constants');
 const AllowedTypes = Object.keys(PluginTypes).map(key => PluginTypes[key]);
 
 function validateType(v) {
+	
+	if(!v || v==='') return v;
+	
 	if (AllowedTypes.indexOf(v) === -1) {
 		console.error(`Unknown plugin type [${v}], allowed are:\n`);
 		AllowedTypes.forEach(t => console.error(`\t- ${t}`));

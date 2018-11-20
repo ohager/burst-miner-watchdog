@@ -1,5 +1,4 @@
 const fs = require('fs-extra');
-const {statSync} = require('fs');
 const inquirer = require('inquirer');
 const path = require("path");
 const {PluginTypeDirs} = require("../../lib/constants");
