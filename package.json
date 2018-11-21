@@ -61,7 +61,9 @@
     "watchdog": "./dist/bin/watchdog.js",
     "watchdog-plugin": "./dist/bin/watchdog-plugin.js",
     "watchdog-plugin-add": "./dist/bin/watchdog-plugin-add.js",
-    "watchdog-plugin-remove": "./dist/bin/watchdog-plugin-remove.js"
+    "watchdog-plugin-remove": "./dist/bin/watchdog-plugin-remove.js",
+    "watchdog-plugin-create": "./dist/bin/watchdog-plugin-create.js",
+    "watchdog-plugin-list": "./dist/bin/watchdog-plugin-list.js"
   },
   "engines": {
     "node": ">=8.9.0"
