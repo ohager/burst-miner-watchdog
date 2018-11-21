@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 require('module-alias/register');
 const args = require('args');
-const {required, validateType} = require('./lib/argutils');
+const {validateType} = require('./lib/argutils');
 const addCommand = require('./plugin/add');
 
 args.option("type", "The plugin type", '', validateType)
@@ -10,12 +10,14 @@ args.option("type", "The plugin type", '', validateType)
 
 const options = args.parse(process.argv, {version: false});
 
-try {
-	addCommand(options);
-}
-catch (e) {
-	console.error(e);
-	process.exit(-1);
-}
+(async function () {
+	try {
+		await addCommand(options);
+	}
+	catch (e) {
+		console.error(e);
+		process.exit(-1);
+	}
+})();
 
 

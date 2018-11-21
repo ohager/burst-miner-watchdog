@@ -53,7 +53,7 @@ function addPlugin({type, name, src}) {
 
 async function add(opts) {
 	
-	inquirer.prompt([
+	const answers = await inquirer.prompt([
 		{
 			type: 'list',
 			name: 'type',
@@ -76,13 +76,12 @@ async function add(opts) {
 			default: './',
 			when: () => isEmpty(opts.src),
 		},
-	]).then((answers) => {
-		addPlugin({
-			...opts,
-			...answers
-		})
-	});
+	]);
 	
+	addPlugin({
+		...opts,
+		...answers
+	})
 }
 
 module.exports = add;

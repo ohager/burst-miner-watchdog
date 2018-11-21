@@ -1,7 +1,8 @@
 const fs = require('fs-extra');
 const inquirer = require('inquirer');
 const path = require("path");
-const {PluginTypeDirs} = require("../../lib/constants");
+const isEmpty = require("lodash/isEmpty");
+const {PluginTypeDirs, PluginTypes} = require("../../lib/constants");
 
 const getTypeDir = (type) => {
 	const dir = PluginTypeDirs[type];
@@ -9,6 +10,8 @@ const getTypeDir = (type) => {
 	
 	return dir;
 };
+
+const getTypeNames = () => Object.keys(PluginTypes).map(k => PluginTypes[k]);
 
 function removeExistingPlugin(targetDir) {
 	inquirer.prompt([
@@ -27,9 +30,33 @@ function removeExistingPlugin(targetDir) {
 		fs.removeSync(targetDir);
 	})
 }
-function removePlugin({type, name}) {
+
+async function removePlugin(opts) {
 	
-	const targetDir = path.join(getTypeDir(type), name);
+	const answers = await inquirer.prompt([
+		{
+			type: 'list',
+			name: 'type',
+			message: 'What type of plugin do you want to remove?',
+			choices: getTypeNames(),
+			default: PluginTypes.HANDLER,
+			when: () => isEmpty(opts.type),
+		},
+		{
+			type: 'input',
+			name: 'name',
+			message: 'What is the name of the plugin to be removed?',
+			default: 'myAwesome',
+			when: () => isEmpty(opts.name),
+		},
+	]);
+	
+	const params = {
+		...opts,
+		...answers
+	};
+	
+	const targetDir = path.join(getTypeDir(params.type), params.name);
 	
 	if (!fs.pathExistsSync(targetDir)) {
 		throw `No Plugin found at '${targetDir}'`;
