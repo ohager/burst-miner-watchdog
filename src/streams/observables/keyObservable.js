@@ -5,8 +5,8 @@ const process = require('process');
 class KeyObservable {
 	
 	constructor(){
-//		readline.emitKeypressEvents(process.stdin);
-//		process.stdin.setRawMode(true);
+		readline.emitKeypressEvents(process.stdin);
+		process.stdin.setRawMode(true);
 	}
 	
 	get() {

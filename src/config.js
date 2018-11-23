@@ -39,11 +39,16 @@ const configSchema = {
 				}
 			}
 		},
-		Plugins : {
+		providers : {
 			type: 'object',
 			required: ['explorer', 'minerProcess', 'minerObservable'],
-			
 		},
+		handlers : {
+			type: 'array',
+			items : {
+				type : 'string',
+			}
+		}
 	}
 };
 

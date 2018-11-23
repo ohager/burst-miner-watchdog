@@ -1,7 +1,3 @@
-const path = require('path');
-const chalk = require('chalk');
-const {version, author} = require('../package.json');
-const {isDevelopmentMode} = require('./utils');
 const {selectors: $, updaters} = require('./state');
 
 const keyObservable = require('@streams/observables/keyObservable');
@@ -15,25 +11,6 @@ const {writeInfo, wait} = require('./utils');
 
 const MAX_RESTART_ATTEMPTS = 10;
 const RESTART_DELAY = 3000;
-
-function printHeader() {
-	const bright = chalk.bold.white;
-	const blue = chalk.bold.blueBright;
-	const yellow = chalk.bold.yellowBright;
-	
-	console.log(blue(`-----------------------------------------------[${bright(version)}]---`));
-	console.log(bright('                BURST Miner Watchdog 🐕'));
-	console.log(yellow('\n         Keeps your miner running without pain'));
-	if (isDevelopmentMode()) {
-		console.log(bright('\n                  *DEVELOPMENT MODE*'));
-	}
-	console.log('\n');
-	console.log(blue(`-----------------------------------------------[${bright(author.name)}]---`));
-	console.log('\n');
-	console.log('Press \'h\' for additional commands');
-	console.log('\n');
-	
-}
 
 const PRINT_CONFIG = 'c';
 const PRINT_HELP = 'h';
@@ -62,7 +39,7 @@ class Backbone {
 		
 		this.config = $.selectConfig();
 
-		this.minerProcess = minerProcessProvider.provide(); //minerProcessProvider(this.config.miner.path, this.config.miner.pingInterval);
+		this.minerProcess = minerProcessProvider.provide();
 		this.explorerBlocksProvider = explorerProvider;
 		this.minerBlocksProvider = minerObservableProvider;
 		this.handlerPlugins = handler;
@@ -92,7 +69,6 @@ class Backbone {
 	}
 	
 	async __initialize() {
-		printHeader();
 		writeInfo("Initializing Watchdog...");
 		await this.minerProcess.start();
 	}

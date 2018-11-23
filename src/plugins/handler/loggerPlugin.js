@@ -44,7 +44,7 @@ class LoggerPlugin extends HandlerPlugin{
 	}
 
 	onStart(e){
-		writeInfo("Starting...", e)
+		writeInfo("Starting...")
 	}
 
 	onExit(e){

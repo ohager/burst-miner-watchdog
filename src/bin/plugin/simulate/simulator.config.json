@@ -5,7 +5,7 @@
     "minerObservable" : "mockminer"
   },
   "handlers":[
-    "loggerPlugin"
+    "c:\\bin\\loggerPlugin.js"
   ],
   "logger":{
     "enabled" : true,
