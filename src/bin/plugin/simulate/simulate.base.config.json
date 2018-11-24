@@ -4,9 +4,7 @@
     "minerProcess" : "mockminer",
     "minerObservable" : "mockminer"
   },
-  "handlers":[
-    "c:\\bin\\loggerPlugin.js"
-  ],
+  "handlers":[],
   "logger":{
     "enabled" : true,
     "level": "verbose"
