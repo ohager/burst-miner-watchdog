@@ -7,6 +7,8 @@ const ProviderPlugin = require('./plugins/providerPlugin');
 function getPluginPath(pluginReference, dir) {
 	let pluginPath = null;
 	
+	console.log("getPluginPath", pluginReference, dir);
+	
 	if (fs.existsSync(pluginReference)) {
 		const isDir = fs.statSync(pluginReference).isDirectory();
 		pluginPath = isDir ? path.join(pluginReference, 'index.js') : pluginReference;
@@ -15,11 +17,9 @@ function getPluginPath(pluginReference, dir) {
 		pluginPath = path.join(dir, pluginReference, 'index.js')
 	}
 	
-	console.log("getPluginPath", pluginPath);
 	
 	return pluginPath;
 }
-
 
 function isValidHandlerPlugin(plugin, file) {
 	
@@ -38,7 +38,7 @@ function loadHandlerPlugins(dir, handlers) {
 		files = fs.readdirSync(dir).map(f => path.join(dir, f));
 	}
 	else {
-		files = handlers.map(getPluginPath)
+		files = handlers.map( h => getPluginPath(h, dir) );
 	}
 	
 	files.forEach(file => {
