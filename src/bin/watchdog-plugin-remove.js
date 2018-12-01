@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-require('module-alias/register');
 const args = require('args');
 const {validateType} = require('./lib/argutils');
 const removeCommand = require('./plugin/remove');

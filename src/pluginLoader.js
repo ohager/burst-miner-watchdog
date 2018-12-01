@@ -1,9 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const isEmpty = require('lodash/isEmpty');
-const {writeInfo, writeWarning, writeSuccess, writeError} = require('@/utils');
-const HandlerPlugin = require('@/plugins/handlerPlugin');
-const ProviderPlugin = require('@/plugins/providerPlugin');
+const {writeInfo, writeWarning, writeSuccess, writeError} = require('./utils');
+const ProviderPlugin = require('./plugins/providerPlugin');
 
 function getPluginPath(pluginReference, dir) {
 	let pluginPath = null;

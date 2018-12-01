@@ -1,5 +1,5 @@
 const HandlerPlugin = require('../handlerPlugin');
-const {writeWarning, writeSuccess, writeError, writeInfo} = require('@/utils');
+const {writeWarning, writeSuccess, writeError, writeInfo} = require('../../utils');
 
 const blockString = e => `Blocks - Miner: ${e.miner}, Explorer: ${e.explorer}`;
 const logBlockEvent = e => writeSuccess(`${blockString(e)}`, '[✓]');

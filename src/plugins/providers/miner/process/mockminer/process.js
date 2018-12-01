@@ -1,6 +1,8 @@
-const ProviderPlugin = require('@/plugins/providerPlugin');
-const {writeDebug, writeWarning, writeSuccess} = require('@/utils');
 const config = require("./config.json");
+// FIXME: remove dependencies... plugin must be self-constaining
+// TODO: may interesting to offer kind of sdk (burst-miner-watch-sdk)
+const ProviderPlugin = require('../../../../providerPlugin');
+const {writeDebug, writeWarning, writeSuccess} = require('../../../../../utils');
 
 class Process extends ProviderPlugin {
 	

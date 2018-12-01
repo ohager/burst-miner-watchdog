@@ -1,8 +1,10 @@
-const keyObservable = require('@/streams/observables/keyObservable');
-const {printHelp} = require('@streams/effects/keys');
-const {forKey} = require('@streams/operations/keys');
-const {writeDebug} = require('@/utils');
-const ProviderPlugin = require('@/plugins/providerPlugin');
+// FIXME: remove dependencies... plugin must be self-constaining
+// TODO: may interesting to offer kind of sdk (burst-miner-watch-sdk)
+const keyObservable = require('../../../../streams/observables/keyObservable');
+const {printHelp} = require('../../../../streams/effects/keys');
+const {forKey} = require('../../../../streams/operations/keys');
+const {writeDebug} = require('../../../../utils');
+const ProviderPlugin = require('../../../../plugins/providerPlugin');
 
 const INC_BLOCK = '<';
 const DEC_BLOCK = '>';

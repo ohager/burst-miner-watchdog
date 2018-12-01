@@ -1,13 +1,12 @@
 #!/usr/bin/env node
-require('module-alias/register');
 
 const path = require('path');
 const args = require('args');
 const chalk = require('chalk');
-const config = require('@/config');
-const {isDevelopmentMode,writeError} = require('@/utils');
-const pluginLoader = require('@/pluginLoader');
-const Backbone = require('@/backbone');
+const config = require('../config');
+const {isDevelopmentMode,writeError} = require('../utils');
+const pluginLoader = require('../pluginLoader');
+const Backbone = require('../backbone');
 const {version, author} = require('../../package.json');
 
 args.option("config", "The configuration file to be used", path.join(__dirname, "../../config.json"))

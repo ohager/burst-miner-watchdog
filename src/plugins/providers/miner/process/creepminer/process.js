@@ -1,9 +1,11 @@
 const path = require('path');
 const {spawn} = require('child_process');
-const ProviderPlugin = require('@/plugins/providerPlugin');
 const listProcesses = require('ps-list');
-const {writeInfo, writeWarning, writeSuccess} = require('@/utils');
 const config = require('./config.json');
+// FIXME: remove dependencies... plugin must be self-constaining
+// TODO: may interesting to offer kind of sdk (burst-miner-watch-sdk)
+const ProviderPlugin = require('../../../../providerPlugin');
+const {writeInfo, writeWarning, writeSuccess} = require('../../../../../utils');
 
 
 function windowsify(path) {

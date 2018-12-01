@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-require('module-alias/register');
 const args = require('args');
 
 args.command("add", "Adds plugin to watchdog (call watchdog-plugin-add --help if needed)")

@@ -1,6 +1,8 @@
 const Rx = require('rxjs');
 const WebSocket = require('ws');
-const MinerObservablePlugin = require('@/plugins/minerObservablePlugin');
+// FIXME: remove dependencies... plugin must be self-constaining
+// TODO: may interesting to offer kind of sdk (burst-miner-watch-sdk)
+const MinerObservablePlugin = require('../../../../minerObservablePlugin');
 const config = require('./config.json');
 
 class Observable extends MinerObservablePlugin {

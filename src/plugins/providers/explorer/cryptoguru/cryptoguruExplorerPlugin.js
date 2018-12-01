@@ -1,8 +1,10 @@
 const Rx = require('rxjs');
-const ExplorerApi = require('@/explorerApi');
-const {logError} = require('@streams/effects/errors');
-const {writeInfo} = require('@/utils');
-const ProviderPlugin = require('@/plugins/providerPlugin');
+// FIXME: remove dependencies... plugin must be self-constaining
+// TODO: may interesting to offer kind of sdk (burst-miner-watch-sdk)
+const ExplorerApi = require('../../../../explorerApi');
+const {logError} = require('../../../../streams/effects/errors');
+const {writeInfo} = require('../../../../utils');
+const ProviderPlugin = require('../../../../plugins/providerPlugin');
 const config = require('./config');
 
 const MAX_RETRY_INTERVAL = 5 * 60 * 1000;

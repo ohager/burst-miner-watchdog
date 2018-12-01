@@ -3,7 +3,7 @@ const path = require('path');
 const {format} = require('date-fns');
 const winston = require('winston');
 const chalk = require('chalk');
-const {updaters, selectors : $, state} = require('@/state');
+const {updaters, selectors : $, state} = require('./state');
 const bright = chalk.bold.white;
 
 const colorize = (level, text) => {

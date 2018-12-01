@@ -1,12 +1,12 @@
 const {selectors: $, updaters} = require('./state');
 
-const keyObservable = require('@streams/observables/keyObservable');
-const keyEffects = require('@streams/effects/keys');
-const blockEffects = require('@streams/effects/blocks');
-const errorEffects = require('@streams/effects/errors');
-const blockOperations = require('@streams/operations/blocks');
-const errorOperations = require('@streams/operations/errors');
-const keyOperations = require('@streams/operations/keys');
+const keyObservable = require('./streams/observables/keyObservable');
+const keyEffects = require('./streams/effects/keys');
+const blockEffects = require('./streams/effects/blocks');
+const errorEffects = require('./streams/effects/errors');
+const blockOperations = require('./streams/operations/blocks');
+const errorOperations = require('./streams/operations/errors');
+const keyOperations = require('./streams/operations/keys');
 const {writeInfo, wait} = require('./utils');
 
 const MAX_RESTART_ATTEMPTS = 10;

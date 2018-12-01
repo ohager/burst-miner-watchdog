@@ -1,5 +1,5 @@
 const {highlight} = require('cli-highlight');
-const Logger = require('@/logger');
+const Logger = require('./logger');
 
 let logger = null;
 
