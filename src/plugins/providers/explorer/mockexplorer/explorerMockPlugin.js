@@ -1,3 +1,4 @@
+const {filter, map, scan, tap} = require('rxjs/operators');
 // FIXME: remove dependencies... plugin must be self-constaining
 // TODO: may interesting to offer kind of sdk (burst-miner-watch-sdk)
 const keyObservable = require('../../../../streams/observables/keyObservable');
@@ -41,11 +42,13 @@ class ExplorerMock extends ProviderPlugin {
 		const key$ = keyObservable.get();
 		
 		this.lastBlock$ = key$
-			.filter(allowedBlockKeys)
-			.do(forKey(SHOW_HELP)(() => printHelp(keyMap, 'Explorer Simulator')))
-			.scan(keyReducer, 0)
-			.map(n => ({height: n}))
-			.do(({height}) => writeDebug("Explorer Block: " + height, '[TEST]'))
+			.pipe(
+				filter(allowedBlockKeys),
+				tap(forKey(SHOW_HELP)(() => printHelp(keyMap, 'Explorer Simulator'))),
+				scan(keyReducer, 0),
+				map(n => ({height: n})),
+				tap(({height}) => writeDebug("Explorer Block: " + height, '[TEST]'))
+			)
 	}
 	
 	provide() {

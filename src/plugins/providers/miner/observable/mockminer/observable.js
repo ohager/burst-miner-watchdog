@@ -1,3 +1,4 @@
+const {filter, scan, map, tap} = require('rxjs/operators');
 // FIXME: remove dependencies... plugin must be self-constaining
 // TODO: may interesting to offer kind of sdk (burst-miner-watch-sdk)
 const MinerObservablePlugin = require('../../../../minerObservablePlugin');
@@ -48,16 +49,20 @@ class Observable extends MinerObservablePlugin {
 		const key$ = keyObservable.get();
 		
 		this.block$ = key$
-			.filter(allowedBlockKeys)
-			.scan(keyReducer, 0)
-			.map(height => ({block:height}))
-			.do(b => writeDebug(`Miner Block: ${b.block}`, '[TEST]'));
+			.pipe(
+				filter(allowedBlockKeys),
+				scan(keyReducer, 0),
+				map(height => ({block: height})),
+				tap(b => writeDebug(`Miner Block: ${b.block}`, '[TEST]'))
+			);
 		
 		this.error$ = key$
-			.let(sequence(RAISE_ERROR))
-			.map(() => 'MinerSimulationObservable: Just a test exception');
+			.pipe(
+				sequence(RAISE_ERROR),
+				map(() => 'MinerSimulationObservable: Just a test exception')
+			);
 		
-		this.close$ = key$.let(sequence(CLOSE_CONNECTION));
+		this.close$ = key$.pipe(sequence(CLOSE_CONNECTION));
 	}
 	
 	blockEvents() {

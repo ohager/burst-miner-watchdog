@@ -1,7 +1,7 @@
-const Rx  = require('rxjs');
+const {pipe}= require('rxjs');
 const {filter, pluck} = require('rxjs/operators');
 
-const connectionError = Rx.pipe(
+const connectionError = pipe(
 	pluck('error', 'errno'),
 	filter(e => e === 'ECONNREFUSED'),
 );

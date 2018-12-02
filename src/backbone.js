@@ -1,3 +1,6 @@
+const {combineLatest, merge} = require('rxjs');
+const {pluck, map, tap, takeUntil} = require('rxjs/operators');
+
 const {selectors: $, updaters} = require('./state');
 
 const keyObservable = require('./streams/observables/keyObservable');
@@ -38,7 +41,7 @@ class Backbone {
 		this.__createPluginCaller = this.__createPluginCaller.bind(this);
 		
 		this.config = $.selectConfig();
-
+		
 		this.minerProcess = minerProcessProvider.provide();
 		this.explorerBlocksProvider = explorerProvider;
 		this.minerBlocksProvider = minerObservableProvider;
@@ -46,14 +49,15 @@ class Backbone {
 		
 		const {forKey} = keyOperations;
 		this.key$ = keyObservable.get();
-		this.key$
-			.do(this.__createPluginCaller('onKey'))
-			.do(forKey(PRINT_CONFIG)(keyEffects.printConfiguration))
-			.do(forKey(TOGGLE_LOGGER)(keyEffects.toggleLogger))
-			.do(forKey(SHOW_STATE)(keyEffects.printState))
-			.do(forKey(PRINT_HELP)(() => keyEffects.printHelp(keyMap)))
-			.do(forKey(RESTART_MINER)(this.__restartMiner, this))
-			.subscribe();
+		this.key$.pipe(
+			// make plugin caller subject and broadcast events - this is still imperative
+			tap(this.__createPluginCaller('onKey')),
+			tap(forKey(PRINT_CONFIG)(keyEffects.printConfiguration)),
+			tap(forKey(TOGGLE_LOGGER)(keyEffects.toggleLogger)),
+			tap(forKey(SHOW_STATE)(keyEffects.printState)),
+			tap(forKey(PRINT_HELP)(() => keyEffects.printHelp(keyMap))),
+			tap(forKey(RESTART_MINER)(this.__restartMiner, this)),
+		).subscribe();
 		
 		this.restartRetrialCounter = 0;
 		
@@ -105,7 +109,7 @@ class Backbone {
 		
 		//const {miner, explorer} = this.config;
 		
-		const {blockEvents : block$, errorEvents : error$, closeEvents : close$} = this.minerBlocksProvider.provide();
+		const {blockEvents: block$, errorEvents: error$, closeEvents: close$} = this.minerBlocksProvider.provide();
 		const explorerBlock$ = this.explorerBlocksProvider.provide();
 		
 		const {exitKey} = keyOperations;
@@ -114,41 +118,53 @@ class Backbone {
 		const {updateError} = errorEffects;
 		
 		const explorerBlockHeight$ = explorerBlock$
-			.do(this.__createPluginCaller('onExplorerBlock'))
-			.pluck('height')
-			.do(updateExplorerBlockState);
+			.pipe(
+				tap(this.__createPluginCaller('onExplorerBlock')),
+				pluck('height'),
+				tap(updateExplorerBlockState),
+			);
 		
 		const minerBlockHeight$ = block$
-			.do(this.__createPluginCaller('onMinerBlock'))
-			.do(() => {
-				this.restartRetrialCounter = 0
-			})
-			.pluck('block')
-			.map(b => +b)
-			.do(updateMinerBlockState);
+			.pipe(
+				tap(() => {
+					this.restartRetrialCounter = 0
+				}),
+				tap(this.__createPluginCaller('onMinerBlock')),
+				pluck('block'),
+				map(b => +b),
+				tap(updateMinerBlockState),
+			);
 		
 		const minerClose$ = close$
-			.do(this.__createPluginCaller('onMinerClose'));
+			.pipe(
+				tap(this.__createPluginCaller('onMinerClose')),
+			);
 		
 		const minerError$ = error$
-			.do(this.__createPluginCaller('onMinerError'))
-			.do(updateError);
+			.pipe(
+				tap(this.__createPluginCaller('onMinerError')),
+				tap(updateError),
+			);
 		
 		const exitRequest$ = this.key$
-			.let(exitKey)
-			.do(this.__exit.bind(this, {reason: "Requested by user"}));
+			.pipe(
+				exitKey,
+				tap(this.__exit.bind(this, {reason: "Requested by user"})),
+			);
 		
-		const minerStuck$ = minerBlockHeight$
-			.combineLatest(explorerBlockHeight$)
-			.let(purify)
-			.do(this.__createPluginCaller('onNewBlock'))
-			.let(isExplorerBeforeMiner)
-			.do(this.__createPluginCaller('onMinerStuck'));
+		const minerStuck$ = combineLatest(minerBlockHeight$, explorerBlockHeight$)
+			.pipe(
+				purify,
+				tap(this.__createPluginCaller('onNewBlock')),
+				isExplorerBeforeMiner,
+				tap(this.__createPluginCaller('onMinerStuck')),
+			);
 		
-		this.restartSubscription = minerClose$
-			.merge(minerError$, minerStuck$)
-			.takeUntil(exitRequest$)
-			.do(this.__createPluginCaller('onRestart'))
+		this.restartSubscription = merge(minerClose$, minerError$, minerStuck$)
+			.pipe(
+				takeUntil(exitRequest$),
+				tap(this.__createPluginCaller('onRestart')),
+			)
 			.subscribe(this.__restartMiner);
 		
 	}

@@ -1,4 +1,4 @@
-const Rx = require('rxjs');
+const {interval, from}  = require('rxjs');
 // FIXME: remove dependencies... plugin must be self-constaining
 // TODO: may interesting to offer kind of sdk (burst-miner-watch-sdk)
 const ExplorerApi = require('../../../../explorerApi');
@@ -18,9 +18,8 @@ class ExplorerPlugin extends ProviderPlugin {
 		this.retryInterval = this.__getInitialRetryInterval();
 		
 		const api = new ExplorerApi(config.baseUrl);
-		this.lastBlock$ = Rx.Observable
-			.interval(this.pollInterval)
-			.flatMap(() => Rx.Observable.fromPromise(api.getLastBlock()))
+		this.lastBlock$ = interval(this.pollInterval)
+			.flatMap(() => from(api.getLastBlock()))
 			.distinctUntilChanged((p,q) => p.height === q.height)
 			.retryWhen(this.__retryStrategy)
 	}
@@ -30,8 +29,8 @@ class ExplorerPlugin extends ProviderPlugin {
 	__retryStrategy(error$) {
 		this.retryInterval = Math.min(this.retryInterval * 2, MAX_RETRY_INTERVAL);
 		return error$
-			.do(logError)
-			.do(() => {writeInfo(`Retry contacting explorer in ${this.retryInterval/1000} seconds`)})
+			.tap(logError)
+			.tap(() => {writeInfo(`Retry contacting explorer in ${this.retryInterval/1000} seconds`)})
 			.delay(this.retryInterval)
 	}
 	

@@ -1,7 +1,10 @@
-const process = require('process');
-const Rx = require('rxjs');
 const readline = require('readline');
+const process = require('process');
+const {fromEventPattern}= require('rxjs');
 
+/**
+ * Creates an observable event stream (rxjs) of key strokes
+ */
 class KeyObservable {
 	
 	constructor(){
@@ -9,8 +12,16 @@ class KeyObservable {
 		process.stdin.setRawMode(true);
 	}
 	
+	/**
+	 * Get key stroke observable
+	 * @example
+	 * key event structure
+	 * { name, sequence }
+	 *
+	 * @returns {*} An observable stream of key strokes
+	 */
 	get() {
-		return Rx.Observable.fromEventPattern(
+		return fromEventPattern(
 			(handler) => {
 				process.stdin.on('keypress', handler)
 			},
