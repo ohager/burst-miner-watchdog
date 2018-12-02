@@ -1,1 +1,0 @@
-{"providers":{"explorer":"mockexplorer","minerProcess":"mockminer","minerObservable":"mockminer"},"handlers":["c:\\coding\\devbutze\\burst-miner-watchdog\\src\\bin\\myAwesome\\index.js"],"logger":{"enabled":true,"level":"verbose"},"failuresUntilGiveup":5}

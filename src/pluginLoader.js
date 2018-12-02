@@ -30,6 +30,15 @@ function isValidHandlerPlugin(plugin, file) {
 	return isValid;
 }
 
+function isValidProviderPlugin(plugin, file) {
+	
+	const isValid = plugin.provide && plugin.name;
+	if (!isValid) {
+		writeError(`File '${file}' is not a valid ProviderPlugin`)
+	}
+	return isValid;
+}
+
 function loadHandlerPlugins(dir, handlers) {
 	
 	let plugins = [];
@@ -59,7 +68,8 @@ function loadHandlerPlugins(dir, handlers) {
 }
 
 function assertValidProviderPlugin(plugin, file) {
-	if (!(plugin instanceof ProviderPlugin)) {
+	
+	if (!(isValidProviderPlugin(plugin,file))) {
 		throw new Error(`File '${file}' is not a valid Provider Plugin`);
 	}
 }
