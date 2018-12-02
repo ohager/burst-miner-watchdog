@@ -1,7 +1,7 @@
 const {of} = require('rxjs');
-const {exitKey, key} = require('../../../src/operators/keys');
+const {exitKey, key} = require('../../src/operators/keys');
 
-test('Keys effects - exitKey', () => {
+test('Keys oper - exitKey', () => {
 	
 	const fn = jest.fn();
 	
