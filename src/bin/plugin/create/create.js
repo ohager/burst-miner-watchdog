@@ -54,8 +54,36 @@ function createHandler(targetDir, name) {
 	
 }
 
-function createExplorer() {
-	console.log("createExplorer")
+function createExplorer(targetDir, name) {
+	const typeDir = 'providers/explorer';
+	const pluginName = camelCase(name) + 'Plugin';
+	const srcDir = path.join(TemplateRootDir, typeDir);
+	fs.copySync(srcDir, targetDir);
+	
+	generateFileFromTemplate(
+		typeDir,
+		'src/explorer.template.js', {
+			pluginName,
+			name,
+		},
+		targetDir,
+		`./src/${pluginName}.js`);
+	
+	generateFileFromTemplate(
+		typeDir,
+		'./index.template.js', {
+			plugin: pluginName + '.js',
+		},
+		targetDir,
+		'index.js');
+	
+	generateFileFromTemplate(
+		typeDir,
+		'package.template.json', {
+			name,
+		},
+		targetDir,
+		'package.json');
 }
 
 function createMinerObservable() {
