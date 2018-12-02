@@ -7,9 +7,9 @@ const keyObservable = require('./observables/keyObservable');
 const keyEffects = require('./effects/keys');
 const blockEffects = require('./effects/blocks');
 const errorEffects = require('./effects/errors');
-const blockOperations = require('./operations/blocks');
-const errorOperations = require('./operations/errors');
-const keyOperations = require('./operations/keys');
+const blockOperations = require('./operators/blocks');
+const errorOperations = require('./operators/errors');
+const keyOperations = require('./operators/keys');
 const {writeInfo, wait} = require('./utils');
 
 const MAX_RESTART_ATTEMPTS = 10;

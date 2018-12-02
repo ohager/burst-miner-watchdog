@@ -3,7 +3,7 @@ const {filter, map, scan, tap} = require('rxjs/operators');
 // TODO: may interesting to offer kind of sdk (burst-miner-watch-sdk)
 const keyObservable = require('../../../../observables/keyObservable');
 const {printHelp} = require('../../../../effects/keys');
-const {forKey} = require('../../../../operations/keys');
+const {forKey} = require('../../../../operators/keys');
 const {writeDebug} = require('../../../../utils');
 const ProviderPlugin = require('../../../../plugins/providerPlugin');
 
