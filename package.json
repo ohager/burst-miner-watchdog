@@ -45,6 +45,7 @@
     "cli-highlight": "^2.0.0",
     "date-fns": "^1.29.0",
     "fs-extra": "^7.0.1",
+    "husky": "^1.2.0",
     "lodash": "^4.17.11",
     "ps-list": "^6.0.0",
     "rxjs": "^6.3.3",
@@ -73,5 +74,11 @@
     "start:qa": "cross-env NODE_ENV=qa node ./src/bin/watchdog.js",
     "release": "npm run test:dev && npm run build && node ./tools/tag.js",
     "release-local": "npm run test:dev && npm run build && node ./tools/install-local.js"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn test:dev"
+    }
   }
+
 }
