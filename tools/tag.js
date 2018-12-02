@@ -10,7 +10,7 @@ const STDIO_OPTIONS = {stdio: 'inherit'};
 const PACKAGE_JSON_FILE = path.join(__dirname, '../package.json');
 
 const exep = (cmd, args, opts) => new Promise((resolve, reject) => {
-	console.log(`Executing ${cmd} ${args.join(" ")}`);
+	console.log(`Executing [${cmd} ${args.join(" ")}]`);
 	const process = spawn(cmd, args, opts);
 	process.on('close', (code) => {
 		if (code !== 0) {
