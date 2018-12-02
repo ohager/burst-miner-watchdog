@@ -1,5 +1,5 @@
-const {writeWarning, writeSuccess} = require('../../utils');
-const {createBlockUpdater} = require('../../state/updaters');
+const {writeWarning, writeSuccess} = require('../utils');
+const {createBlockUpdater} = require('../state/updaters');
 
 const blockString = e => `Blocks - Miner: ${e.miner}, Explorer: ${e.explorer}`;
 

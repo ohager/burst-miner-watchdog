@@ -1,8 +1,8 @@
 const chalk = require('chalk');
-const {state} = require('../../state');
-const $ = require('../../state/selectors');
-const {loggerUpdater} = require('../../state/updaters');
-const {writeDebug, highlightJson} = require('../../utils');
+const {state} = require('../state/index');
+const $ = require('../state/selectors');
+const {loggerUpdater} = require('../state/updaters');
+const {writeDebug, highlightJson} = require('../utils');
 
 const bright = chalk.bold.white;
 

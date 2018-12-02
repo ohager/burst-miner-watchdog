@@ -3,13 +3,13 @@ const {pluck, map, tap, takeUntil} = require('rxjs/operators');
 
 const {selectors: $, updaters} = require('./state');
 
-const keyObservable = require('./streams/observables/keyObservable');
-const keyEffects = require('./streams/effects/keys');
-const blockEffects = require('./streams/effects/blocks');
-const errorEffects = require('./streams/effects/errors');
-const blockOperations = require('./streams/operations/blocks');
-const errorOperations = require('./streams/operations/errors');
-const keyOperations = require('./streams/operations/keys');
+const keyObservable = require('./observables/keyObservable');
+const keyEffects = require('./effects/keys');
+const blockEffects = require('./effects/blocks');
+const errorEffects = require('./effects/errors');
+const blockOperations = require('./operations/blocks');
+const errorOperations = require('./operations/errors');
+const keyOperations = require('./operations/keys');
 const {writeInfo, wait} = require('./utils');
 
 const MAX_RESTART_ATTEMPTS = 10;
@@ -50,7 +50,6 @@ class Backbone {
 		const {forKey} = keyOperations;
 		this.key$ = keyObservable.get();
 		this.key$.pipe(
-			// make plugin caller subject and broadcast events - this is still imperative
 			tap(this.__createPluginCaller('onKey')),
 			tap(forKey(PRINT_CONFIG)(keyEffects.printConfiguration)),
 			tap(forKey(TOGGLE_LOGGER)(keyEffects.toggleLogger)),
@@ -106,8 +105,6 @@ class Backbone {
 	__handleEvents() {
 		
 		writeInfo("Start listening blocks");
-		
-		//const {miner, explorer} = this.config;
 		
 		const {blockEvents: block$, errorEvents: error$, closeEvents: close$} = this.minerBlocksProvider.provide();
 		const explorerBlock$ = this.explorerBlocksProvider.provide();

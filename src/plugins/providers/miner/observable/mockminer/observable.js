@@ -2,9 +2,9 @@ const {filter, scan, map, tap} = require('rxjs/operators');
 // FIXME: remove dependencies... plugin must be self-constaining
 // TODO: may interesting to offer kind of sdk (burst-miner-watch-sdk)
 const MinerObservablePlugin = require('../../../../minerObservablePlugin');
-const keyObservable = require('../../../../../streams/observables/keyObservable');
-const {sequence} = require('../../../../../streams/operations/keys');
-const {printHelp} = require('../../../../../streams/effects/keys');
+const keyObservable = require('../../../../../observables/keyObservable');
+const {sequence} = require('../../../../../operations/keys');
+const {printHelp} = require('../../../../../effects/keys');
 const {writeDebug} = require('../../../../../utils');
 
 const INC_BLOCK = ',';

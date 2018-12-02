@@ -4,7 +4,7 @@ class HandlerPlugin {
 		this.name = name;
 	}
 	
-	onEvent(){
+	onEvent(e){
 		throw `onEvent() method is not implemented by custom Plugin '${this.name}'`
 	}
 }

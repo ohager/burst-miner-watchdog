@@ -1,5 +1,5 @@
 const {of} = require('rxjs');
-const {exitKey, key} = require('../../../src/streams/operations/keys');
+const {exitKey, key} = require('../../../src/operators/keys');
 
 test('Keys effects - exitKey', () => {
 	

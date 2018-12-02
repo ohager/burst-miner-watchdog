@@ -1,4 +1,4 @@
-const {errorUpdater} = require('../../state/updaters');
+const {errorUpdater} = require('../state/updaters');
 
 function updateError({message}) {
 	errorUpdater(message);
