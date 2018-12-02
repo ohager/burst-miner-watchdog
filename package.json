@@ -58,7 +58,8 @@
     "watchdog-plugin-add": "./dist/bin/watchdog-plugin-add.js",
     "watchdog-plugin-remove": "./dist/bin/watchdog-plugin-remove.js",
     "watchdog-plugin-create": "./dist/bin/watchdog-plugin-create.js",
-    "watchdog-plugin-list": "./dist/bin/watchdog-plugin-list.js"
+    "watchdog-plugin-list": "./dist/bin/watchdog-plugin-list.js",
+    "watchdog-plugin-simulate": "./dist/bin/watchdog-plugin-simulate.js"
   },
   "engines": {
     "node": ">=8.9.0"
@@ -71,6 +72,6 @@
     "start:dev": "cross-env NODE_ENV=development node ./src/bin/watchdog.js",
     "start:qa": "cross-env NODE_ENV=qa node ./src/bin/watchdog.js",
     "release": "npm run test:dev && npm run build && node ./tools/tag.js",
-    "release-local": "node ./tools/install-local.js"
+    "release-local": "npm run test:dev && npm run build && node ./tools/install-local.js"
   }
 }
