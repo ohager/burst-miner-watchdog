@@ -1,84 +1,83 @@
 {
-  "author": {
-    "name": "ohager",
-    "email": "oliver@devbutze.com"
-  },
-  "license": "MIT",
-  "name": "burst-miner-watchdog",
-  "version": "0.0.1",
-  "description": "A watchdog for BURST coin miner",
-  "keywords": [
-    "burst",
-    "burstcoin",
-    "miner",
-    "mining",
-    "resilience",
-    "automation"
-  ],
-  "private": false,
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ohager/burst-miner-watchdog.git"
-  },
-  "devDependencies": {
-    "babel-cli": "^6.24.1",
-    "babel-preset-stage-2": "^6.24.1",
-    "codecov": "^3.1.0",
-    "cross-env": "^5.2.0",
-    "inquirer": "^6.2.1",
-    "jest": "^23.6.0",
-    "semver": "^5.6.0"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "moduleNameMapper": {
-      "@/(.*)$": "<rootDir>/src/$1",
-      "@streams/(.*)$": "<rootDir>/src/streams/$1"
-    }
-  },
-  "dependencies": {
-    "ajv": "^6.6.1",
-    "ajv-errors": "^1.0.0",
-    "args": "^5.0.0",
-    "axios": "^0.18.0",
-    "chalk": "^2.4.1",
-    "cli-highlight": "^2.0.0",
-    "date-fns": "^1.29.0",
-    "fs-extra": "^7.0.1",
-    "husky": "^1.2.0",
-    "lodash": "^4.17.11",
-    "ps-list": "^6.0.0",
-    "rxjs": "^6.3.3",
-    "stappo": "^0.0.7",
-    "winston": "^2.4.2",
-    "ws": "^5.2.0"
-  },
-  "bin": {
-    "watchdog": "./dist/bin/watchdog.js",
-    "watchdog-plugin": "./dist/bin/watchdog-plugin.js",
-    "watchdog-plugin-add": "./dist/bin/watchdog-plugin-add.js",
-    "watchdog-plugin-remove": "./dist/bin/watchdog-plugin-remove.js",
-    "watchdog-plugin-create": "./dist/bin/watchdog-plugin-create.js",
-    "watchdog-plugin-list": "./dist/bin/watchdog-plugin-list.js",
-    "watchdog-plugin-simulate": "./dist/bin/watchdog-plugin-simulate.js"
-  },
-  "engines": {
-    "node": ">=8.9.0"
-  },
-  "preferGlobal": true,
-  "scripts": {
-    "build": "babel src --out-dir dist --copy-files",
-    "test:dev": "cross-env NODE_ENV=test jest",
-    "test": "cross-env NODE_ENV=test jest --coverage && codecov",
-    "start:dev": "cross-env NODE_ENV=development node ./src/bin/watchdog.js",
-    "start:qa": "cross-env NODE_ENV=qa node ./src/bin/watchdog.js",
-    "release": "npm run test:dev && npm run build && node ./tools/tag.js",
-    "release-local": "npm run test:dev && npm run build && node ./tools/install-local.js"
-  },
-  "husky": {
-    "hooks": {
-      "pre-push": "yarn test:dev"
-    }
-  }
-
+	"author": {
+		"name": "ohager",
+		"email": "oliver@devbutze.com"
+	},
+	"license": "MIT",
+	"name": "burst-miner-watchdog",
+	"version": "0.0.2",
+	"description": "A watchdog for BURST coin miner",
+	"keywords": [
+		"burst",
+		"burstcoin",
+		"miner",
+		"mining",
+		"resilience",
+		"automation"
+	],
+	"private": false,
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ohager/burst-miner-watchdog.git"
+	},
+	"devDependencies": {
+		"babel-cli": "^6.24.1",
+		"babel-preset-stage-2": "^6.24.1",
+		"codecov": "^3.1.0",
+		"cross-env": "^5.2.0",
+		"inquirer": "^6.2.1",
+		"jest": "^23.6.0",
+		"semver": "^5.6.0"
+	},
+	"jest": {
+		"testEnvironment": "node",
+		"moduleNameMapper": {
+			"@/(.*)$": "<rootDir>/src/$1",
+			"@streams/(.*)$": "<rootDir>/src/streams/$1"
+		}
+	},
+	"dependencies": {
+		"ajv": "^6.6.1",
+		"ajv-errors": "^1.0.0",
+		"args": "^5.0.0",
+		"axios": "^0.18.0",
+		"chalk": "^2.4.1",
+		"cli-highlight": "^2.0.0",
+		"date-fns": "^1.29.0",
+		"fs-extra": "^7.0.1",
+		"husky": "^1.2.0",
+		"lodash": "^4.17.11",
+		"ps-list": "^6.0.0",
+		"rxjs": "^6.3.3",
+		"stappo": "^0.0.7",
+		"winston": "^2.4.2",
+		"ws": "^5.2.0"
+	},
+	"bin": {
+		"watchdog": "./dist/bin/watchdog.js",
+		"watchdog-plugin": "./dist/bin/watchdog-plugin.js",
+		"watchdog-plugin-add": "./dist/bin/watchdog-plugin-add.js",
+		"watchdog-plugin-remove": "./dist/bin/watchdog-plugin-remove.js",
+		"watchdog-plugin-create": "./dist/bin/watchdog-plugin-create.js",
+		"watchdog-plugin-list": "./dist/bin/watchdog-plugin-list.js",
+		"watchdog-plugin-simulate": "./dist/bin/watchdog-plugin-simulate.js"
+	},
+	"engines": {
+		"node": ">=8.9.0"
+	},
+	"preferGlobal": true,
+	"scripts": {
+		"build": "babel src --out-dir dist --copy-files",
+		"test:dev": "cross-env NODE_ENV=test jest",
+		"test": "cross-env NODE_ENV=test jest --coverage && codecov",
+		"start:dev": "cross-env NODE_ENV=development node ./src/bin/watchdog.js",
+		"start:qa": "cross-env NODE_ENV=qa node ./src/bin/watchdog.js",
+		"release": "npm run test:dev && npm run build && node ./tools/tag.js",
+		"release-local": "npm run test:dev && npm run build && node ./tools/install-local.js"
+	},
+	"husky": {
+		"hooks": {
+			"pre-push": "yarn test:dev"
+		}
+	}
 }
