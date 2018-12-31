@@ -1,5 +1,7 @@
 # burst-miner-watchdog
 
+> In favor of [Aspera](https://github.com/PoC-Consortium/Aspera) I lower this projects priority...
+
 > Work in progress - not ready yet
 
 A watchdog for Burst miner (currently for creepMiner, but easily extensible), i.e. a tool to keep your BURST mining running. 
